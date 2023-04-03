@@ -48,4 +48,12 @@ public class MeterReadingController {
                 ? ResponseEntity.ok(readings.get())
                 : ResponseEntity.notFound().build();
     }
+
+    @GetMapping("/read/last-week/{smartMeterId}")
+    public ResponseEntity<List<ElectricityReading>> getLastWeekReadings(@PathVariable String smartMeterId) {
+        Optional<List<ElectricityReading>> readings = meterReadingService.getLastWeekReadings(smartMeterId);
+        return readings
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
 }
