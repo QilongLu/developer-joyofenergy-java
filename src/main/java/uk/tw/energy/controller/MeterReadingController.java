@@ -2,6 +2,8 @@ package uk.tw.energy.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -10,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import uk.tw.energy.domain.ElectricityReading;
 import uk.tw.energy.domain.MeterReadings;
+import uk.tw.energy.service.AccountService;
 import uk.tw.energy.service.MeterReadingService;
 
 import java.util.List;
@@ -17,12 +20,16 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/readings")
+@ControllerAdvice
 public class MeterReadingController {
 
     private final MeterReadingService meterReadingService;
 
-    public MeterReadingController(MeterReadingService meterReadingService) {
+    private final AccountService accountService;
+
+    public MeterReadingController(MeterReadingService meterReadingService, AccountService accountService) {
         this.meterReadingService = meterReadingService;
+        this.accountService = accountService;
     }
 
     @PostMapping("/store")
@@ -50,10 +57,19 @@ public class MeterReadingController {
     }
 
     @GetMapping("/read/last-week/{smartMeterId}")
-    public ResponseEntity<List<ElectricityReading>> getLastWeekReadings(@PathVariable String smartMeterId) {
+    public ResponseEntity<List<ElectricityReading>> getLastWeekReadings(@PathVariable String smartMeterId) throws Exception {
+        String pricePlanId = accountService.getPricePlanIdForSmartMeterId(smartMeterId);
+        if (pricePlanId==null) {
+            throw new PricePlanNotMatchedException(HttpStatus.NOT_FOUND, "Price plan not matched.");
+        }
         Optional<List<ElectricityReading>> readings = meterReadingService.getLastWeekReadings(smartMeterId);
         return readings
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @ExceptionHandler(PricePlanNotMatchedException.class)
+    public ResponseEntity<String> handleMyException(PricePlanNotMatchedException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
     }
 }

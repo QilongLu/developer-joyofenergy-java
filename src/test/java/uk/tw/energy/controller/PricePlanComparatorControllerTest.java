@@ -50,7 +50,8 @@ public class PricePlanComparatorControllerTest {
     @Test
     public void shouldCalculateCostForMeterReadingsForEveryPricePlan() {
 
-        ElectricityReading electricityReading = new ElectricityReading(Instant.now().minusSeconds(3600), BigDecimal.valueOf(15.0));
+        ElectricityReading electricityReading = new ElectricityReading(Instant.now().minusSeconds(3600),
+                BigDecimal.valueOf(15.0));
         ElectricityReading otherReading = new ElectricityReading(Instant.now(), BigDecimal.valueOf(5.0));
         meterReadingService.storeReadings(SMART_METER_ID, Arrays.asList(electricityReading, otherReading));
 

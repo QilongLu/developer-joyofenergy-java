@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import uk.tw.energy.builders.MeterReadingsBuilder;
 import uk.tw.energy.domain.ElectricityReading;
 import uk.tw.energy.domain.MeterReadings;
+import uk.tw.energy.service.AccountService;
 import uk.tw.energy.service.MeterReadingService;
 
 import java.math.BigDecimal;
@@ -26,11 +27,12 @@ public class MeterReadingControllerTest {
     private static final String SMART_METER_ID = "10101010";
     private MeterReadingController meterReadingController;
     private MeterReadingService meterReadingService;
+    private AccountService accountService;
 
     @BeforeEach
     public void setUp() {
         this.meterReadingService = new MeterReadingService(new HashMap<>());
-        this.meterReadingController = new MeterReadingController(meterReadingService);
+        this.meterReadingController = new MeterReadingController(meterReadingService, accountService);
     }
 
     @Test
@@ -93,7 +95,7 @@ public class MeterReadingControllerTest {
     }
 
     @Test
-    public void givenMeterIdShouldReturnLastWeekCostUsage() {
+    public void givenMeterIdShouldReturnLastWeekCostUsage() throws Exception {
         Instant now = Instant.now();
         ElectricityReading lastWeekReading = new ElectricityReading(now.minus(8,
                 ChronoUnit.DAYS),
