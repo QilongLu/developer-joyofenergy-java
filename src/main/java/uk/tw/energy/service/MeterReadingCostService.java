@@ -10,10 +10,10 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class MeterReadingCostService {
@@ -23,16 +23,13 @@ public class MeterReadingCostService {
     }
     public Optional<List<ElectricityReading>> getLastWeekReadings(String smartMeterId) {
         List<ElectricityReading> thisReadings = meterAssociatedReadings.get(smartMeterId);
-        List<ElectricityReading> lastWeekReadings = new ArrayList<>();
-        for (ElectricityReading thisReading : thisReadings) {
-            if (isWithinLastWeek(thisReading.getTime())) {
-                lastWeekReadings.add(thisReading);
-            }
-        }
+        List<ElectricityReading> lastWeekReadings = thisReadings.stream()
+                .filter(reading -> isWithinLastWeek(reading.getTime()))
+                .collect(Collectors.toList());
         return Optional.of(lastWeekReadings);
     }
 
-    public boolean isWithinLastWeek(Instant time) {
+    private boolean isWithinLastWeek(Instant time) {
         Instant now = Instant.now();
         LocalDateTime thisWeekSaturday = LocalDateTime.ofInstant(now, ZoneId.systemDefault())
                 .with(TemporalAdjusters.previousOrSame(DayOfWeek.SATURDAY));
