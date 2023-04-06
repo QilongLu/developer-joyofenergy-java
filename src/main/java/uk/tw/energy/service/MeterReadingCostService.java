@@ -26,15 +26,18 @@ public class MeterReadingCostService {
         this.accountService = accountService;
     }
     public Optional<List<ElectricityReading>> getLastWeekReadings(String smartMeterId) {
+        List<ElectricityReading> thisReadings = meterAssociatedReadings.get(smartMeterId);
+        if (thisReadings == null) {
+            return Optional.empty();
+        }
         String pricePlanId = accountService.getPricePlanIdForSmartMeterId(smartMeterId);
         if (pricePlanId==null) {
             throw new PricePlanNotMatchedException(smartMeterId);
         }
-        List<ElectricityReading> thisReadings = meterAssociatedReadings.get(smartMeterId);
         List<ElectricityReading> lastWeekReadings = thisReadings.stream()
                 .filter(reading -> isWithinLastWeek(reading.getTime()))
                 .collect(Collectors.toList());
-        return Optional.of(lastWeekReadings);
+        return lastWeekReadings.isEmpty() ? Optional.empty() : Optional.of(lastWeekReadings);
     }
 
     private boolean isWithinLastWeek(Instant time) {
