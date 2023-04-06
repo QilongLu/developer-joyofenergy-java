@@ -1,6 +1,7 @@
 package uk.tw.energy.service;
 
 import org.springframework.stereotype.Service;
+import uk.tw.energy.controller.PricePlanNotMatchedException;
 import uk.tw.energy.domain.ElectricityReading;
 
 import java.time.DayOfWeek;
@@ -18,10 +19,17 @@ import java.util.stream.Collectors;
 @Service
 public class MeterReadingCostService {
     private final Map<String, List<ElectricityReading>> meterAssociatedReadings;
-    public MeterReadingCostService(Map<String, List<ElectricityReading>> meterAssociatedReadings) {
+    private final AccountService accountService;
+
+    public MeterReadingCostService(Map<String, List<ElectricityReading>> meterAssociatedReadings, AccountService accountService) {
         this.meterAssociatedReadings = meterAssociatedReadings;
+        this.accountService = accountService;
     }
     public Optional<List<ElectricityReading>> getLastWeekReadings(String smartMeterId) {
+        String pricePlanId = accountService.getPricePlanIdForSmartMeterId(smartMeterId);
+        if (pricePlanId==null) {
+            throw new PricePlanNotMatchedException(smartMeterId);
+        }
         List<ElectricityReading> thisReadings = meterAssociatedReadings.get(smartMeterId);
         List<ElectricityReading> lastWeekReadings = thisReadings.stream()
                 .filter(reading -> isWithinLastWeek(reading.getTime()))
