@@ -16,6 +16,7 @@ import uk.tw.energy.service.MeterReadingCostService;
 import java.math.BigDecimal;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -33,10 +34,10 @@ class MeterReadingCostControllerTest {
 
     @Test
     void givenMeterIdShouldReturnLastWeekUsageCost() throws Exception {
-        when(meterReadingCostService.getLastWeekCost(SMART_METER_ID)).thenReturn(BigDecimal.valueOf(100.0));
+        when(meterReadingCostService.getLastWeekCost(any(String.class))).thenReturn(BigDecimal.valueOf(100.0));
 
         mockMvc.perform(MockMvcRequestBuilders
-                        .get("/readings/last-week/costs/" + SMART_METER_ID))
+                        .get("/smart-meters/costs/" + SMART_METER_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().string("100.0"));
     }
@@ -45,18 +46,17 @@ class MeterReadingCostControllerTest {
     void shouldThrowNotFoundStatus() throws Exception {
         when(meterReadingCostService.getLastWeekCost(UNKNOWN_ID)).thenThrow(NotFoundException.class);
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/readings/last-week/costs/" + UNKNOWN_ID))
-                .andExpect(status().isNotFound())
-                .andExpect(content().string("0.0"));
+        mockMvc.perform(MockMvcRequestBuilders.get("/smart-meters/costs/" + UNKNOWN_ID))
+                .andExpect(status().isNotFound());
     }
 
     @Test
     void shouldThrowPricePlanNotMatchedException() throws Exception {
         Mockito.doThrow(new PricePlanNotMatchedException(SMART_METER_ID))
-                .when(meterReadingCostService).getLastWeekCost(SMART_METER_ID);
+                .when(meterReadingCostService).getLastWeekCost(any(String.class));
 
         mockMvc.perform(MockMvcRequestBuilders
-                        .get("/readings/last-week/costs/" + SMART_METER_ID)
+                        .get("/smart-meters/costs/" + SMART_METER_ID)
                 )
                 .andExpect(status().isNotFound())
                 .andExpect(content().string(containsString("No price plan matched with " + SMART_METER_ID)));

@@ -2,10 +2,8 @@ package uk.tw.energy.service;
 
 import javassist.NotFoundException;
 import org.springframework.stereotype.Service;
-import uk.tw.energy.SeedingApplicationDataConfiguration;
 import uk.tw.energy.controller.PricePlanNotMatchedException;
 import uk.tw.energy.domain.ElectricityReading;
-import uk.tw.energy.domain.PricePlan;
 
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
@@ -17,7 +15,6 @@ import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -43,15 +40,11 @@ public class MeterReadingCostService {
                 .collect(Collectors.toList());
 
         if (lastWeekReadings.isEmpty()) {throw new NotFoundException("No Readings Found.");}
+        if (lastWeekReadings.size() == 1) {
+            throw new IllegalArgumentException("Invalid reading");
+        }
 
-        SeedingApplicationDataConfiguration seedingApplicationDataConfiguration = new SeedingApplicationDataConfiguration();
-        PricePlan pricePlan = seedingApplicationDataConfiguration.pricePlans().stream()
-                .filter(p -> Objects.equals(p.getPlanName(), pricePlanId))
-                .findFirst()
-                .get();
-        BigDecimal lastWeekCosts = pricePlanService.calculateCost(lastWeekReadings, pricePlan);
-
-        return lastWeekReadings.isEmpty() ? null : lastWeekCosts;
+        return pricePlanService.calculateCost(lastWeekReadings, pricePlanId);
     }
 
     private boolean isWithinLastWeek(Instant time) {

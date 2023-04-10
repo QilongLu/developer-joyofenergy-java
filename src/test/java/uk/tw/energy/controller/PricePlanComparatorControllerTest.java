@@ -2,6 +2,11 @@ package uk.tw.energy.controller;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import uk.tw.energy.domain.ElectricityReading;
 import uk.tw.energy.domain.PricePlan;
@@ -19,15 +24,22 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.mockito.Mockito.when;
 
+@SpringBootTest
+@ExtendWith(MockitoExtension.class)
 public class PricePlanComparatorControllerTest {
 
     private static final String PRICE_PLAN_1_ID = "test-supplier";
     private static final String PRICE_PLAN_2_ID = "best-supplier";
     private static final String PRICE_PLAN_3_ID = "second-best-supplier";
     private static final String SMART_METER_ID = "smart-meter-id";
+    @InjectMocks
     private PricePlanComparatorController controller;
     private MeterReadingService meterReadingService;
+    @MockBean
+    private AccountService accountService;
+
 
     @BeforeEach
     public void setUp() {
@@ -41,7 +53,7 @@ public class PricePlanComparatorControllerTest {
 
         Map<String, String> meterToTariffs = new HashMap<>();
         meterToTariffs.put(SMART_METER_ID, PRICE_PLAN_1_ID);
-        AccountService accountService = new AccountService(meterToTariffs);
+        when(accountService.getPricePlanIdForSmartMeterId(SMART_METER_ID)).thenReturn(PRICE_PLAN_1_ID);
 
         controller = new PricePlanComparatorController(tariffService, accountService);
     }
@@ -58,7 +70,6 @@ public class PricePlanComparatorControllerTest {
         expectedPricePlanToCost.put(PRICE_PLAN_1_ID, BigDecimal.valueOf(100.0));
         expectedPricePlanToCost.put(PRICE_PLAN_2_ID, BigDecimal.valueOf(10.0));
         expectedPricePlanToCost.put(PRICE_PLAN_3_ID, BigDecimal.valueOf(20.0));
-
         Map<String, Object> expected = new HashMap<>();
         expected.put(PricePlanComparatorController.PRICE_PLAN_ID_KEY, PRICE_PLAN_1_ID);
         expected.put(PricePlanComparatorController.PRICE_PLAN_COMPARISONS_KEY, expectedPricePlanToCost);

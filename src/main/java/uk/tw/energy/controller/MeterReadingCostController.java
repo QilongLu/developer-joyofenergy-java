@@ -1,8 +1,5 @@
 package uk.tw.energy.controller;
 
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import javassist.NotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +14,7 @@ import uk.tw.energy.service.MeterReadingCostService;
 import java.math.BigDecimal;
 
 @RestController
-@RequestMapping("/readings")
+@RequestMapping("/smart-meters")
 public class MeterReadingCostController {
 
     private final MeterReadingCostService meterReadingCostService;
@@ -26,12 +23,8 @@ public class MeterReadingCostController {
         this.meterReadingCostService = meterReadingCostService;
     }
 
-    @GetMapping("/last-week/costs/{smartMeterId}")
+    @GetMapping("/costs/{smartMeterId}")
     @ResponseStatus(HttpStatus.OK)
-    @ApiResponses(
-            value = {
-                    @ApiResponse(responseCode = "404", content = @Content)
-            })
     public BigDecimal getLastWeekCosts(@PathVariable String smartMeterId) throws NotFoundException {
         return meterReadingCostService.getLastWeekCost(smartMeterId);
     }
@@ -41,7 +34,11 @@ public class MeterReadingCostController {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
     }
     @ExceptionHandler(NotFoundException.class)
-    public ResponseEntity<String> ExceptionHandler() {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("0.0");
+    public ResponseEntity<String> ExceptionHandler(NotFoundException exception) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(exception.getMessage());
+    }
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<String> ExceptionHandler(IllegalArgumentException exception) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
     }
 }

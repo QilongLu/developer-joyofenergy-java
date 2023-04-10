@@ -10,7 +10,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.test.context.SpringBootTest;
 import uk.tw.energy.controller.PricePlanNotMatchedException;
 import uk.tw.energy.domain.ElectricityReading;
-import uk.tw.energy.domain.PricePlan;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -70,7 +69,7 @@ class MeterReadingCostServiceTest {
     @Test
     void shouldReturnCorrectCosts() throws NotFoundException {
         when(accountService.getPricePlanIdForSmartMeterId(SMART_METER_ID)).thenReturn(PRICE_PLAN_ID);
-        when(pricePlanService.calculateCost(anyList(), any(PricePlan.class))).thenReturn(BigDecimal.valueOf(1848.0));
+        when(pricePlanService.calculateCost(anyList(), any(String.class))).thenReturn(BigDecimal.valueOf(1848.0));
         BigDecimal lastWeekCosts = meterReadingCostService.getLastWeekCost(SMART_METER_ID);
         assertEquals(BigDecimal.valueOf(1848.0), lastWeekCosts);
     }
