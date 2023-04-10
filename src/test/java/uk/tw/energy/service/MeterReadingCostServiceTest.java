@@ -1,26 +1,34 @@
 package uk.tw.energy.service;
 
+import javassist.NotFoundException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.test.context.SpringBootTest;
 import uk.tw.energy.controller.PricePlanNotMatchedException;
 import uk.tw.energy.domain.ElectricityReading;
+import uk.tw.energy.domain.PricePlan;
 
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
+@SpringBootTest
 class MeterReadingCostServiceTest {
 
     private static final String SMART_METER_ID = "smart-meter-0";
@@ -31,42 +39,39 @@ class MeterReadingCostServiceTest {
 
     @Mock
     private AccountService accountService;
-
     private MeterReadingCostService meterReadingCostService;
+    @Mock
+    private PricePlanService pricePlanService;
 
     @BeforeEach
     public void setUp() {
         Map<String, List<ElectricityReading>> meterAssociatedReadings = new HashMap<>();
         meterAssociatedReadings.put(SMART_METER_ID, Arrays.asList(
                 new ElectricityReading(NOW, BigDecimal.valueOf(0.2)),
-                new ElectricityReading(ONE_WEEK_AGO, BigDecimal.valueOf(0.3))
+                new ElectricityReading(ONE_WEEK_AGO, BigDecimal.valueOf(0.3)),
+                new ElectricityReading(ONE_WEEK_AGO.plus(1, ChronoUnit.DAYS), BigDecimal.valueOf(15.0))
         ));
-        meterReadingCostService = new MeterReadingCostService(meterAssociatedReadings, accountService);
+        meterReadingCostService = new MeterReadingCostService(meterAssociatedReadings, accountService, pricePlanService);
     }
 
 
     @Test
     void shouldThrowPricePlanNotMatchedException() {
-        Mockito.when(accountService.getPricePlanIdForSmartMeterId(SMART_METER_ID))
+        when(accountService.getPricePlanIdForSmartMeterId(SMART_METER_ID))
                 .thenReturn(null);
-        Assertions.assertThrows(PricePlanNotMatchedException.class, () -> meterReadingCostService.getLastWeekReadings(SMART_METER_ID));
+        Assertions.assertThrows(PricePlanNotMatchedException.class, () -> meterReadingCostService.getLastWeekCost(SMART_METER_ID));
     }
 
     @Test
-    void shouldReturnEmptyOptional() {
-        Optional<List<ElectricityReading>> result = meterReadingCostService.getLastWeekReadings(UNKNOWN_METER_ID);
-        Assertions.assertTrue(result.isEmpty());
+    void shouldThrowNotFoundExceptionWhenGivenAnUnknownMeterId() {
+        assertThrows(NotFoundException.class, () -> meterReadingCostService.getLastWeekCost(UNKNOWN_METER_ID));
     }
 
     @Test
-    void shouldReturnLastWeekReadings() {
-        Mockito.when(accountService.getPricePlanIdForSmartMeterId(SMART_METER_ID))
-                .thenReturn(PRICE_PLAN_ID);
-        List<ElectricityReading> expected = Collections.singletonList(
-                new ElectricityReading(ONE_WEEK_AGO, BigDecimal.valueOf(0.3))
-        );
-        Optional<List<ElectricityReading>> result = meterReadingCostService.getLastWeekReadings(SMART_METER_ID);
-        Assertions.assertEquals(expected.get(0).getReading(), result.get().get(0).getReading());
-        Assertions.assertEquals(expected.get(0).getTime(), result.get().get(0).getTime());
+    void shouldReturnCorrectCosts() throws NotFoundException {
+        when(accountService.getPricePlanIdForSmartMeterId(SMART_METER_ID)).thenReturn(PRICE_PLAN_ID);
+        when(pricePlanService.calculateCost(anyList(), any(PricePlan.class))).thenReturn(BigDecimal.valueOf(1848.0));
+        BigDecimal lastWeekCosts = meterReadingCostService.getLastWeekCost(SMART_METER_ID);
+        assertEquals(BigDecimal.valueOf(1848.0), lastWeekCosts);
     }
 }

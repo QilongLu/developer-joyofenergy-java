@@ -73,9 +73,9 @@ public class PricePlanComparatorControllerTest {
         meterReadingService.storeReadings(SMART_METER_ID, Arrays.asList(electricityReading, otherReading));
 
         List<Map.Entry<String, BigDecimal>> expectedPricePlanToCost = new ArrayList<>();
-        expectedPricePlanToCost.add(new AbstractMap.SimpleEntry<>(PRICE_PLAN_2_ID, BigDecimal.valueOf(19.0)));
-        expectedPricePlanToCost.add(new AbstractMap.SimpleEntry<>(PRICE_PLAN_3_ID, BigDecimal.valueOf(38.0)));
-        expectedPricePlanToCost.add(new AbstractMap.SimpleEntry<>(PRICE_PLAN_1_ID, BigDecimal.valueOf(190.0)));
+        expectedPricePlanToCost.add(new AbstractMap.SimpleEntry<>(PRICE_PLAN_2_ID, BigDecimal.valueOf(9.5)));
+        expectedPricePlanToCost.add(new AbstractMap.SimpleEntry<>(PRICE_PLAN_3_ID, BigDecimal.valueOf(19.0)));
+        expectedPricePlanToCost.add(new AbstractMap.SimpleEntry<>(PRICE_PLAN_1_ID, BigDecimal.valueOf(95.0)));
 
         assertThat(controller.recommendCheapestPricePlans(SMART_METER_ID, null).getBody()).isEqualTo(expectedPricePlanToCost);
     }
@@ -89,8 +89,8 @@ public class PricePlanComparatorControllerTest {
         meterReadingService.storeReadings(SMART_METER_ID, Arrays.asList(electricityReading, otherReading));
 
         List<Map.Entry<String, BigDecimal>> expectedPricePlanToCost = new ArrayList<>();
-        expectedPricePlanToCost.add(new AbstractMap.SimpleEntry<>(PRICE_PLAN_2_ID, BigDecimal.valueOf(12.5)));
-        expectedPricePlanToCost.add(new AbstractMap.SimpleEntry<>(PRICE_PLAN_3_ID, BigDecimal.valueOf(25.1)));
+        expectedPricePlanToCost.add(new AbstractMap.SimpleEntry<>(PRICE_PLAN_2_ID, BigDecimal.valueOf(9.4)));
+        expectedPricePlanToCost.add(new AbstractMap.SimpleEntry<>(PRICE_PLAN_3_ID, BigDecimal.valueOf(18.8)));
 
         assertThat(controller.recommendCheapestPricePlans(SMART_METER_ID, 2).getBody()).isEqualTo(expectedPricePlanToCost);
     }

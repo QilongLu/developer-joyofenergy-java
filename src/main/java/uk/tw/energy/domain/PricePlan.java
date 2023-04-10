@@ -6,7 +6,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public class PricePlan {
-
     private final String energySupplier;
     private final String planName;
     private final BigDecimal unitRate; // unit price per kWh
@@ -38,7 +37,6 @@ public class PricePlan {
                 .map(multiplier -> unitRate.multiply(multiplier.multiplier))
                 .orElse(unitRate);
     }
-
 
     static class PeakTimeMultiplier {
 
