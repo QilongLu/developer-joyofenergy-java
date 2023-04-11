@@ -32,30 +32,25 @@ public class MeterReadingCostService {
         List<ElectricityReading> thisReadings = meterAssociatedReadings.get(smartMeterId);
         if (thisReadings == null) {throw new NotFoundException("No Readings Found.");}
         String pricePlanId = accountService.getPricePlanIdForSmartMeterId(smartMeterId);
-        if (pricePlanId==null) {
-            throw new PricePlanNotMatchedException(smartMeterId);
-        }
+        if (pricePlanId==null) {throw new PricePlanNotMatchedException(smartMeterId);}
         List<ElectricityReading> lastWeekReadings = thisReadings.stream()
                 .filter(reading -> isWithinLastWeek(reading.getTime()))
                 .collect(Collectors.toList());
-
-        if (lastWeekReadings.isEmpty()) {throw new NotFoundException("No Readings Found.");}
-        if (lastWeekReadings.size() == 1) {
-            throw new IllegalArgumentException("Invalid reading");
-        }
-
         return pricePlanService.calculateCost(lastWeekReadings, pricePlanId);
     }
 
     private boolean isWithinLastWeek(Instant time) {
         Instant now = Instant.now();
-
         LocalDateTime thisWeekSunday = LocalDateTime.ofInstant(now, ZoneId.systemDefault())
                 .with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY));
-        LocalDateTime lastWeekSunday = thisWeekSunday.minusWeeks(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
+        LocalDateTime lastWeekSunday = thisWeekSunday
+                .minusWeeks(1)
+                .withHour(0)
+                .withMinute(0)
+                .withSecond(0)
+                .withNano(0);
         Instant lastWeekStart = lastWeekSunday.toInstant(ZoneOffset.UTC);
         Instant lastWeekEnd = lastWeekStart.plus(7, ChronoUnit.DAYS);
-
         return time.isAfter(lastWeekStart) && time.isBefore(lastWeekEnd);
     }
 }
