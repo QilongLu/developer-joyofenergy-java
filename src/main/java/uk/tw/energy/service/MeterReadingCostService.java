@@ -1,8 +1,8 @@
 package uk.tw.energy.service;
 
-import javassist.NotFoundException;
 import org.springframework.stereotype.Service;
-import uk.tw.energy.controller.PricePlanNotMatchedException;
+import uk.tw.energy.controller.exception.PricePlanNotMatchedException;
+import uk.tw.energy.controller.exception.ReadingsNotFoundException;
 import uk.tw.energy.domain.ElectricityReading;
 
 import java.math.BigDecimal;
@@ -23,7 +23,9 @@ public class MeterReadingCostService {
     private final AccountService accountService;
     private final PricePlanService pricePlanService;
 
-    public MeterReadingCostService(Map<String, List<ElectricityReading>> meterAssociatedReadings, AccountService accountService, PricePlanService pricePlanService) {
+    public MeterReadingCostService(Map<String, List<ElectricityReading>> meterAssociatedReadings,
+                                   AccountService accountService,
+                                   PricePlanService pricePlanService) {
         this.meterAssociatedReadings = meterAssociatedReadings;
         this.accountService = accountService;
         this.pricePlanService = pricePlanService;
