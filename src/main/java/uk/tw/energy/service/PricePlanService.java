@@ -38,7 +38,7 @@ public class PricePlanService {
         return average.multiply(timeElapsed);
     }
 
-    public BigDecimal calculateCost(List<ElectricityReading> electricityReadings, String pricePlanId) throws ReadingsNotFoundException {
+    public BigDecimal calculateCost(List<ElectricityReading> electricityReadings, String pricePlanId) {
         if (electricityReadings.isEmpty()) {throw new ReadingsNotFoundException();}
         if (electricityReadings.size() == 1) {throw new IllegalArgumentException("Invalid reading");}
         PricePlan pricePlan = pricePlans.stream()
