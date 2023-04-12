@@ -14,6 +14,7 @@ import uk.tw.energy.domain.ElectricityReading;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -35,6 +36,7 @@ class MeterReadingCostServiceTest {
     private static final String PRICE_PLAN_ID = "price-plan-1";
     private static final Instant NOW = Instant.now();
     private static final Instant ONE_WEEK_AGO = NOW.minus(Duration.ofDays(7));
+    private static final String NOW_STR = LocalDate.now().toString();
 
     @Mock
     private AccountService accountService;
@@ -72,5 +74,13 @@ class MeterReadingCostServiceTest {
         when(pricePlanService.calculateCost(anyList(), any(String.class))).thenReturn(BigDecimal.valueOf(1848.0));
         BigDecimal lastWeekCosts = meterReadingCostService.getLastWeekCost(SMART_METER_ID);
         assertEquals(BigDecimal.valueOf(1848.0), lastWeekCosts);
+    }
+
+    @Test
+    void shouldReturnCorrectCostsFromLastWeekOfTheDay() {
+        when(accountService.getPricePlanIdForSmartMeterId(SMART_METER_ID)).thenReturn(PRICE_PLAN_ID);
+        when(pricePlanService.calculateCost(anyList(), any(String.class))).thenReturn(BigDecimal.valueOf(100.0));
+        BigDecimal lastWeekOfTheDayCosts = meterReadingCostService.getLastWeekCostOfTheDate(SMART_METER_ID, NOW_STR);
+        assertEquals(BigDecimal.valueOf(100.0), lastWeekOfTheDayCosts);
     }
 }

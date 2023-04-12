@@ -36,14 +36,25 @@ public class MeterReadingCostService {
         String pricePlanId = accountService.getPricePlanIdForSmartMeterId(smartMeterId);
         if (pricePlanId==null) {throw new PricePlanNotMatchedException(smartMeterId);}
         List<ElectricityReading> lastWeekReadings = thisReadings.stream()
-                .filter(reading -> isWithinLastWeek(reading.getTime()))
+                .filter(reading -> isWithinLastWeek(reading.getTime(), Instant.now()))
                 .collect(Collectors.toList());
         return pricePlanService.calculateCost(lastWeekReadings, pricePlanId);
     }
 
-    private boolean isWithinLastWeek(Instant time) {
-        Instant now = Instant.now();
-        LocalDateTime thisWeekSunday = LocalDateTime.ofInstant(now, ZoneId.systemDefault())
+    public BigDecimal getLastWeekCostOfTheDate(String smartMeterId, String dateStr) {
+        List<ElectricityReading> thisReadings = meterAssociatedReadings.get(smartMeterId);
+        if (thisReadings == null) {throw new ReadingsNotFoundException();}
+        String pricePlanId = accountService.getPricePlanIdForSmartMeterId(smartMeterId);
+        if (pricePlanId==null) {throw new PricePlanNotMatchedException(smartMeterId);}
+        Instant date = LocalDateTime.parse(dateStr + "T00:00:00").toInstant(ZoneOffset.UTC);
+        List<ElectricityReading> lastWeekReadings = thisReadings.stream()
+                .filter(reading -> isWithinLastWeek(reading.getTime(), date))
+                .collect(Collectors.toList());
+        return pricePlanService.calculateCost(lastWeekReadings, pricePlanId);
+    }
+
+    private boolean isWithinLastWeek(Instant thisTime, Instant thisDate) {
+        LocalDateTime thisWeekSunday = LocalDateTime.ofInstant(thisDate, ZoneId.systemDefault())
                 .with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY));
         LocalDateTime lastWeekSunday = thisWeekSunday
                 .minusWeeks(1)
@@ -53,6 +64,6 @@ public class MeterReadingCostService {
                 .withNano(0);
         Instant lastWeekStart = lastWeekSunday.toInstant(ZoneOffset.UTC);
         Instant lastWeekEnd = lastWeekStart.plus(7, ChronoUnit.DAYS);
-        return time.isAfter(lastWeekStart) && time.isBefore(lastWeekEnd);
+        return thisTime.isAfter(lastWeekStart) && thisTime.isBefore(lastWeekEnd);
     }
 }
