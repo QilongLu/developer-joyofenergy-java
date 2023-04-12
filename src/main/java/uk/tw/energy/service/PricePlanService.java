@@ -1,7 +1,7 @@
 package uk.tw.energy.service;
 
-import javassist.NotFoundException;
 import org.springframework.stereotype.Service;
+import uk.tw.energy.controller.exception.ReadingsNotFoundException;
 import uk.tw.energy.domain.ElectricityReading;
 import uk.tw.energy.domain.PricePlan;
 
@@ -29,13 +29,7 @@ public class PricePlanService {
         Optional<List<ElectricityReading>> electricityReadings = meterReadingService.getReadings(smartMeterId);
 
         return electricityReadings.map(readings -> pricePlans.stream().collect(
-                Collectors.toMap(PricePlan::getPlanName, t -> {
-                    try {
-                        return calculateCost(readings, t.getPlanName());
-                    } catch (NotFoundException e) {
-                        throw new RuntimeException(e);
-                    }
-                })));
+                Collectors.toMap(PricePlan::getPlanName, t -> calculateCost(readings, t.getPlanName()))));
     }
 
     private BigDecimal calculateConsumed(List<ElectricityReading> electricityReadings) {
@@ -44,8 +38,8 @@ public class PricePlanService {
         return average.multiply(timeElapsed);
     }
 
-    public BigDecimal calculateCost(List<ElectricityReading> electricityReadings, String pricePlanId) throws NotFoundException {
-        if (electricityReadings.isEmpty()) {throw new NotFoundException("No Readings Found.");}
+    public BigDecimal calculateCost(List<ElectricityReading> electricityReadings, String pricePlanId) throws ReadingsNotFoundException {
+        if (electricityReadings.isEmpty()) {throw new ReadingsNotFoundException();}
         if (electricityReadings.size() == 1) {throw new IllegalArgumentException("Invalid reading");}
         PricePlan pricePlan = pricePlans.stream()
                 .filter(p -> p.getPlanName().equals(pricePlanId))

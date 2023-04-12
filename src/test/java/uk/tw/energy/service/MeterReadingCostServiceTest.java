@@ -1,6 +1,5 @@
 package uk.tw.energy.service;
 
-import javassist.NotFoundException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -8,7 +7,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.test.context.SpringBootTest;
-import uk.tw.energy.controller.PricePlanNotMatchedException;
+import uk.tw.energy.controller.exception.PricePlanNotMatchedException;
+import uk.tw.energy.controller.exception.ReadingsNotFoundException;
 import uk.tw.energy.domain.ElectricityReading;
 
 import java.math.BigDecimal;
@@ -62,12 +62,12 @@ class MeterReadingCostServiceTest {
     }
 
     @Test
-    void shouldThrowNotFoundExceptionWhenGivenAnUnknownMeterId() {
-        assertThrows(NotFoundException.class, () -> meterReadingCostService.getLastWeekCost(UNKNOWN_METER_ID));
+    void shouldThrowReadingsNotFoundExceptionWhenGivenAnUnknownMeterId() {
+        assertThrows(ReadingsNotFoundException.class, () -> meterReadingCostService.getLastWeekCost(UNKNOWN_METER_ID));
     }
 
     @Test
-    void shouldReturnCorrectCosts() throws NotFoundException {
+    void shouldReturnCorrectCosts() throws ReadingsNotFoundException {
         when(accountService.getPricePlanIdForSmartMeterId(SMART_METER_ID)).thenReturn(PRICE_PLAN_ID);
         when(pricePlanService.calculateCost(anyList(), any(String.class))).thenReturn(BigDecimal.valueOf(1848.0));
         BigDecimal lastWeekCosts = meterReadingCostService.getLastWeekCost(SMART_METER_ID);

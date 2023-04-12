@@ -28,9 +28,9 @@ public class MeterReadingCostService {
         this.accountService = accountService;
         this.pricePlanService = pricePlanService;
     }
-    public BigDecimal getLastWeekCost(String smartMeterId) throws NotFoundException {
+    public BigDecimal getLastWeekCost(String smartMeterId) throws ReadingsNotFoundException {
         List<ElectricityReading> thisReadings = meterAssociatedReadings.get(smartMeterId);
-        if (thisReadings == null) {throw new NotFoundException("No Readings Found.");}
+        if (thisReadings == null) {throw new ReadingsNotFoundException();}
         String pricePlanId = accountService.getPricePlanIdForSmartMeterId(smartMeterId);
         if (pricePlanId==null) {throw new PricePlanNotMatchedException(smartMeterId);}
         List<ElectricityReading> lastWeekReadings = thisReadings.stream()
