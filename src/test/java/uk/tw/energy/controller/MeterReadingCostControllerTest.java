@@ -34,20 +34,21 @@ class MeterReadingCostControllerTest {
 
     @Test
     void givenMeterIdShouldReturnLastWeekUsageCost() throws Exception {
-        when(meterReadingCostService.getLastWeekCost(any(String.class))).thenReturn(BigDecimal.valueOf(100.0));
+        when(meterReadingCostService.getLastWeekCost(SMART_METER_ID)).thenReturn(BigDecimal.valueOf(100.0));
 
         mockMvc.perform(MockMvcRequestBuilders
-                        .get("/smart-meters/costs/" + SMART_METER_ID))
+                        .get("/smart-meters/"+ SMART_METER_ID + "/last-week/costs/"))
                 .andExpect(status().isOk())
                 .andExpect(content().string("100.0"));
     }
 
     @Test
-    void shouldThrowNotFoundStatus() throws Exception {
-        when(meterReadingCostService.getLastWeekCost(UNKNOWN_ID)).thenThrow(NotFoundException.class);
+    void shouldThrowReadingsNotFoundStatus() throws Exception {
+        Mockito.doThrow(new ReadingsNotFoundException()).when(meterReadingCostService).getLastWeekCost(UNKNOWN_ID);
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/smart-meters/costs/" + UNKNOWN_ID))
-                .andExpect(status().isNotFound());
+        mockMvc.perform(MockMvcRequestBuilders.get("/smart-meters/"+ UNKNOWN_ID + "/last-week/costs/"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string(containsString("No Readings Found.")));
     }
 
     @Test
@@ -56,7 +57,7 @@ class MeterReadingCostControllerTest {
                 .when(meterReadingCostService).getLastWeekCost(any(String.class));
 
         mockMvc.perform(MockMvcRequestBuilders
-                        .get("/smart-meters/costs/" + SMART_METER_ID)
+                        .get("/smart-meters/"+ SMART_METER_ID + "/last-week/costs/")
                 )
                 .andExpect(status().isNotFound())
                 .andExpect(content().string(containsString("No price plan matched with " + SMART_METER_ID)));
