@@ -26,4 +26,11 @@ public class MeterReadingCostController {
     public BigDecimal getLastWeekCosts(@PathVariable String smartMeterId) throws ReadingsNotFoundException {
         return meterReadingCostService.getLastWeekCost(smartMeterId);
     }
+
+    @GetMapping("/{smartMeterId}/{date}/last-week/costs")
+    @ResponseStatus(HttpStatus.OK)
+    public BigDecimal getLastWeekOfDateCosts(@PathVariable("smartMeterId") String smartMeterId,
+                                             @PathVariable("date") String dateStr) {
+        return meterReadingCostService.getLastWeekCostOfTheDate(smartMeterId, dateStr);
+    }
 }
