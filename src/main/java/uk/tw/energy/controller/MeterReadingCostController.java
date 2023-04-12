@@ -6,10 +6,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import uk.tw.energy.controller.exception.ReadingsNotFoundException;
 import uk.tw.energy.service.MeterReadingCostService;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/smart-meters")
@@ -23,8 +23,9 @@ public class MeterReadingCostController {
 
     @GetMapping("/{smartMeterId}/last-week/costs")
     @ResponseStatus(HttpStatus.OK)
-    public BigDecimal getLastWeekCosts(@PathVariable String smartMeterId) throws ReadingsNotFoundException {
-        return meterReadingCostService.getLastWeekCost(smartMeterId);
+    public BigDecimal getLastWeekCosts(@PathVariable String smartMeterId) {
+        String today = LocalDate.now().toString();
+        return meterReadingCostService.getLastWeekCostOfTheDate(smartMeterId, today);
     }
 
     @GetMapping("/{smartMeterId}/{date}/last-week/costs")

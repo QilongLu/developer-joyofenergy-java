@@ -15,9 +15,9 @@ import uk.tw.energy.controller.exception.ReadingsNotFoundException;
 import uk.tw.energy.service.MeterReadingCostService;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 import static org.hamcrest.Matchers.containsString;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -28,7 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class MeterReadingCostControllerTest {
     private static final String SMART_METER_ID = "smart-meter-0";
     private static final String UNKNOWN_ID = "unknown-meter";
-    private static final String TEST_DATE_STR = "2023-04-12";
+    private static final String TEST_DATE_STR = LocalDate.now().toString();
     @MockBean
     private MeterReadingCostService meterReadingCostService;
     @Autowired
@@ -36,7 +36,7 @@ class MeterReadingCostControllerTest {
 
     @Test
     void givenMeterIdShouldReturnLastWeekUsageCost() throws Exception {
-        when(meterReadingCostService.getLastWeekCost(SMART_METER_ID)).thenReturn(BigDecimal.valueOf(100.0));
+        when(meterReadingCostService.getLastWeekCostOfTheDate(SMART_METER_ID, TEST_DATE_STR)).thenReturn(BigDecimal.valueOf(100.0));
 
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/smart-meters/"+ SMART_METER_ID + "/last-week/costs/"))
@@ -46,7 +46,7 @@ class MeterReadingCostControllerTest {
 
     @Test
     void shouldThrowReadingsNotFoundStatus() throws Exception {
-        Mockito.doThrow(new ReadingsNotFoundException()).when(meterReadingCostService).getLastWeekCost(UNKNOWN_ID);
+        Mockito.doThrow(new ReadingsNotFoundException()).when(meterReadingCostService).getLastWeekCostOfTheDate(UNKNOWN_ID, TEST_DATE_STR);
 
         mockMvc.perform(MockMvcRequestBuilders.get("/smart-meters/"+ UNKNOWN_ID + "/last-week/costs/"))
                 .andExpect(status().isNotFound())
@@ -56,7 +56,7 @@ class MeterReadingCostControllerTest {
     @Test
     void shouldThrowPricePlanNotMatchedException() throws Exception {
         Mockito.doThrow(new PricePlanNotMatchedException(SMART_METER_ID))
-                .when(meterReadingCostService).getLastWeekCost(any(String.class));
+                .when(meterReadingCostService).getLastWeekCostOfTheDate(SMART_METER_ID, TEST_DATE_STR);
 
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/smart-meters/"+ SMART_METER_ID + "/last-week/costs/")
