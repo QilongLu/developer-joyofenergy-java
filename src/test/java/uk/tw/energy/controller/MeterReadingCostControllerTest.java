@@ -1,6 +1,5 @@
 package uk.tw.energy.controller;
 
-import javassist.NotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
@@ -11,6 +10,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import uk.tw.energy.controller.exception.PricePlanNotMatchedException;
+import uk.tw.energy.controller.exception.ReadingsNotFoundException;
 import uk.tw.energy.service.MeterReadingCostService;
 
 import java.math.BigDecimal;
