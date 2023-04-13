@@ -12,10 +12,14 @@ import uk.tw.energy.controller.exception.ReadingsNotFoundException;
 import uk.tw.energy.domain.ElectricityReading;
 
 import java.math.BigDecimal;
+import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAdjusters;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -36,8 +40,9 @@ class MeterReadingCostServiceTest {
     private static final String PRICE_PLAN_ID = "price-plan-1";
     private static final Instant NOW = Instant.now();
     private static final Instant ONE_WEEK_AGO = NOW.minus(Duration.ofDays(7));
-    private static final String TEST_DATE_STR = LocalDate.now().toString();
-    private static final String TEST_LAST_WEEK_DATE_STR = LocalDate.now().minusWeeks(1).toString();
+    private static final Instant TEST_DATE = Instant.now();
+    private static final Instant TEST_THIS_WEEK_SUNDAY = LocalDateTime.ofInstant(TEST_DATE, ZoneId.systemDefault())
+            .with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY)).toInstant(ZoneOffset.UTC);
 
     @Mock
     private AccountService accountService;
@@ -61,19 +66,19 @@ class MeterReadingCostServiceTest {
     void shouldThrowPricePlanNotMatchedException() {
         when(accountService.getPricePlanIdForSmartMeterId(SMART_METER_ID))
                 .thenReturn(null);
-        Assertions.assertThrows(PricePlanNotMatchedException.class, () -> meterReadingCostService.getLastWeekCostOfTheDate(SMART_METER_ID, TEST_DATE_STR));
+        Assertions.assertThrows(PricePlanNotMatchedException.class, () -> meterReadingCostService.getLastWeekCostOfTheDate(SMART_METER_ID, TEST_DATE));
     }
 
     @Test
     void shouldThrowReadingsNotFoundExceptionWhenGivenAnUnknownMeterId() {
-        assertThrows(ReadingsNotFoundException.class, () -> meterReadingCostService.getLastWeekCostOfTheDate(UNKNOWN_METER_ID, TEST_DATE_STR));
+        assertThrows(ReadingsNotFoundException.class, () -> meterReadingCostService.getLastWeekCostOfTheDate(UNKNOWN_METER_ID, TEST_DATE));
     }
 
     @Test
     void shouldReturnCorrectCosts() {
         when(accountService.getPricePlanIdForSmartMeterId(SMART_METER_ID)).thenReturn(PRICE_PLAN_ID);
         when(pricePlanService.calculateCost(anyList(), any(String.class))).thenReturn(BigDecimal.valueOf(1848.0));
-        BigDecimal lastWeekCosts = meterReadingCostService.getLastWeekCostOfTheDate(SMART_METER_ID, TEST_DATE_STR);
+        BigDecimal lastWeekCosts = meterReadingCostService.getLastWeekCostOfTheDate(SMART_METER_ID, TEST_DATE);
         assertEquals(BigDecimal.valueOf(1848.0), lastWeekCosts);
     }
 
@@ -81,7 +86,7 @@ class MeterReadingCostServiceTest {
     void shouldReturnCorrectCostsFromLastWeekOfTheDay() {
         when(accountService.getPricePlanIdForSmartMeterId(SMART_METER_ID)).thenReturn(PRICE_PLAN_ID);
         when(pricePlanService.calculateCost(anyList(), any(String.class))).thenReturn(BigDecimal.valueOf(1248.0));
-        BigDecimal lastWeekOfTheDayCosts = meterReadingCostService.getLastWeekCostOfTheDate(SMART_METER_ID, TEST_LAST_WEEK_DATE_STR);
+        BigDecimal lastWeekOfTheDayCosts = meterReadingCostService.getLastWeekCostOfTheDate(SMART_METER_ID, TEST_THIS_WEEK_SUNDAY);
         assertEquals(BigDecimal.valueOf(1248.0), lastWeekOfTheDayCosts);
     }
 }

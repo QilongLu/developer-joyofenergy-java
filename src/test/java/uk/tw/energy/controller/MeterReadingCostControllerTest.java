@@ -2,7 +2,6 @@ package uk.tw.energy.controller;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -15,11 +14,12 @@ import uk.tw.energy.controller.exception.ReadingsNotFoundException;
 import uk.tw.energy.service.MeterReadingCostService;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.Instant;
 
-import static org.hamcrest.Matchers.containsString;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @AutoConfigureMockMvc
@@ -28,7 +28,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class MeterReadingCostControllerTest {
     private static final String SMART_METER_ID = "smart-meter-0";
     private static final String UNKNOWN_ID = "unknown-meter";
-    private static final String TEST_DATE_STR = LocalDate.now().toString();
     @MockBean
     private MeterReadingCostService meterReadingCostService;
     @Autowired
@@ -36,40 +35,42 @@ class MeterReadingCostControllerTest {
 
     @Test
     void givenMeterIdShouldReturnLastWeekUsageCost() throws Exception {
-        when(meterReadingCostService.getLastWeekCostOfTheDate(SMART_METER_ID, TEST_DATE_STR)).thenReturn(BigDecimal.valueOf(100.0));
+        when(meterReadingCostService.getLastWeekCostOfTheDate(any(String.class), any(Instant.class))).thenReturn(BigDecimal.valueOf(100.0));
 
         mockMvc.perform(MockMvcRequestBuilders
-                        .get("/smart-meters/"+ SMART_METER_ID + "/last-week/costs/"))
+                        .get("/smart-meters/"+ SMART_METER_ID + "/costs"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("100.0"));
+                .andExpect(jsonPath("$").value(100.0));
     }
 
     @Test
     void shouldThrowReadingsNotFoundStatus() throws Exception {
-        Mockito.doThrow(new ReadingsNotFoundException()).when(meterReadingCostService).getLastWeekCostOfTheDate(UNKNOWN_ID, TEST_DATE_STR);
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/smart-meters/"+ UNKNOWN_ID + "/last-week/costs/"))
+        when(meterReadingCostService.getLastWeekCostOfTheDate(any(String.class), any(Instant.class)))
+                .thenThrow(new ReadingsNotFoundException());
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/smart-meters/"+ UNKNOWN_ID + "/costs"))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string(containsString("No Readings Found.")));
+                .andExpect(jsonPath("$").value("No Readings Found."));
     }
 
     @Test
     void shouldThrowPricePlanNotMatchedException() throws Exception {
-        Mockito.doThrow(new PricePlanNotMatchedException(SMART_METER_ID))
-                .when(meterReadingCostService).getLastWeekCostOfTheDate(SMART_METER_ID, TEST_DATE_STR);
+        when(meterReadingCostService.getLastWeekCostOfTheDate(any(String.class), any(Instant.class)))
+                .thenThrow(new PricePlanNotMatchedException(SMART_METER_ID));
 
         mockMvc.perform(MockMvcRequestBuilders
-                        .get("/smart-meters/"+ SMART_METER_ID + "/last-week/costs/")
+                        .get("/smart-meters/"+ SMART_METER_ID + "/costs")
                 )
                 .andExpect(status().isNotFound())
-                .andExpect(content().string(containsString("No price plan matched with " + SMART_METER_ID)));
+                .andExpect(jsonPath("$").value("No price plan matched with " + SMART_METER_ID));
     }
 
     @Test
     void shouldReturnLastWeekCostOfTheGivenDate() throws Exception {
-        when(meterReadingCostService.getLastWeekCostOfTheDate(SMART_METER_ID, TEST_DATE_STR)).thenReturn(BigDecimal.valueOf(100.0));
+        when(meterReadingCostService.getLastWeekCostOfTheDate(any(String.class), any(Instant.class))).thenReturn(BigDecimal.valueOf(100.0));
         mockMvc.perform(MockMvcRequestBuilders
-                .get("/smart-meters/" + SMART_METER_ID +"/"+ TEST_DATE_STR+ "/last-week/costs"))
+                .get("/smart-meters/" + SMART_METER_ID + "/costs"))
                 .andExpect(status().isOk())
                 .andExpect(content().string("100.0"));
     }

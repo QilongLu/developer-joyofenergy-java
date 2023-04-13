@@ -31,20 +31,19 @@ public class MeterReadingCostService {
         this.pricePlanService = pricePlanService;
     }
 
-    public BigDecimal getLastWeekCostOfTheDate(String smartMeterId, String dateStr) {
+    public BigDecimal getLastWeekCostOfTheDate(String smartMeterId, Instant enteredDate) {
         List<ElectricityReading> thisReadings = meterAssociatedReadings.get(smartMeterId);
         if (thisReadings == null) {throw new ReadingsNotFoundException();}
         String pricePlanId = accountService.getPricePlanIdForSmartMeterId(smartMeterId);
         if (pricePlanId==null) {throw new PricePlanNotMatchedException(smartMeterId);}
-        Instant date = LocalDateTime.parse(dateStr + "T00:00:00").toInstant(ZoneOffset.UTC);
         List<ElectricityReading> lastWeekReadings = thisReadings.stream()
-                .filter(reading -> isWithinLastWeek(reading.getTime(), date))
+                .filter(reading -> isWithinLastWeek(reading.getTime(), enteredDate))
                 .collect(Collectors.toList());
         return pricePlanService.calculateCost(lastWeekReadings, pricePlanId);
     }
 
-    private boolean isWithinLastWeek(Instant thisTime, Instant thisDate) {
-        LocalDateTime thisWeekSunday = LocalDateTime.ofInstant(thisDate, ZoneId.systemDefault())
+    private boolean isWithinLastWeek(Instant readingTime, Instant enteredDate) {
+        LocalDateTime thisWeekSunday = LocalDateTime.ofInstant(enteredDate, ZoneId.systemDefault())
                 .with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY));
         LocalDateTime lastWeekSunday = thisWeekSunday
                 .minusWeeks(1)
@@ -54,6 +53,6 @@ public class MeterReadingCostService {
                 .withNano(0);
         Instant lastWeekStart = lastWeekSunday.toInstant(ZoneOffset.UTC);
         Instant lastWeekEnd = lastWeekStart.plus(7, ChronoUnit.DAYS);
-        return thisTime.isAfter(lastWeekStart) && thisTime.isBefore(lastWeekEnd);
+        return readingTime.isAfter(lastWeekStart) && readingTime.isBefore(lastWeekEnd);
     }
 }
