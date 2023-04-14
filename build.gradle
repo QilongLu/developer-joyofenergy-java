@@ -58,6 +58,8 @@ tasks.register('functionalTest', Test) {
 dependencies {
     /* Spring Boot */
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.hibernate.validator:hibernate-validator:6.1.5.Final'
+    implementation 'javax.validation:validation-api:2.0.1.Final'
     testImplementation('org.springframework.boot:spring-boot-starter-test') {
         exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
     }

@@ -2,6 +2,7 @@ package uk.tw.energy.adapter.SmartMeter.controller;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -11,6 +12,7 @@ import uk.tw.energy.adapter.SmartMeter.controller.exception.ReadingsNotFoundExce
 import uk.tw.energy.adapter.SmartMeter.dto.response.SmartMeterResponse;
 import uk.tw.energy.service.MeterReadingCostService;
 
+import javax.validation.constraints.PastOrPresent;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -18,6 +20,7 @@ import java.time.ZoneId;
 
 @RestController
 @RequestMapping("/smart-meters")
+@Validated
 public class MeterReadingCostController {
 
     private final MeterReadingCostService meterReadingCostService;
@@ -31,11 +34,12 @@ public class MeterReadingCostController {
             @PathVariable("smartMeterId") String smartMeterId,
             @RequestParam(value = "enteredDate", required = false)
             @DateTimeFormat(pattern = "yyyy-MM-dd")
+            @PastOrPresent(message = "must be a date in the past or in the present")
             LocalDate enteredDate,
             @RequestParam(value = "duration")
             String duration
     ) {
-        if (duration.equals("lastWeek")) {
+        if (duration.matches("(?i)^last.*week$")) {
             if (enteredDate == null) {
                 enteredDate = LocalDate.now();
             }
