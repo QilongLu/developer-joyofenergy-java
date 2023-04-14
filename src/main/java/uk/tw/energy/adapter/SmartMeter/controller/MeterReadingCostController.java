@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import uk.tw.energy.adapter.SmartMeter.controller.exception.ReadingsNotFoundException;
 import uk.tw.energy.adapter.SmartMeter.dto.response.SmartMeterResponse;
 import uk.tw.energy.service.MeterReadingCostService;
 
@@ -31,17 +32,22 @@ public class MeterReadingCostController {
             @RequestParam(value = "enteredDate", required = false)
             @DateTimeFormat(pattern = "yyyy-MM-dd")
             LocalDate enteredDate,
-            @RequestParam(value = "duration", defaultValue = "lastWeek")
+            @RequestParam(value = "duration")
             String duration
     ) {
-        if (enteredDate == null) {
-            enteredDate = LocalDate.now();
+        if (duration.equals("lastWeek")) {
+            if (enteredDate == null) {
+                enteredDate = LocalDate.now();
+            }
+            Instant date = enteredDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
+            BigDecimal lastWeekCostOfTheDate = meterReadingCostService.getLastWeekCostOfTheDate(smartMeterId, date);
+            SmartMeterResponse smartMeterResponse = new SmartMeterResponse
+                    .Builder(smartMeterId, lastWeekCostOfTheDate)
+                    .build();
+            return ResponseEntity.ok(smartMeterResponse);
         }
-        Instant date = enteredDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
-        BigDecimal lastWeekCostOfTheDate = meterReadingCostService.getLastWeekCostOfTheDate(smartMeterId, date);
-        SmartMeterResponse smartMeterResponse = new SmartMeterResponse
-                .Builder(smartMeterId, lastWeekCostOfTheDate)
-                .build();
-        return ResponseEntity.ok(smartMeterResponse);
+        else {
+            throw new ReadingsNotFoundException();
+        }
     }
 }
