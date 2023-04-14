@@ -27,6 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class MeterReadingCostControllerTest {
     private static final String SMART_METER_ID = "smart-meter-0";
     private static final String UNKNOWN_ID = "unknown-meter";
+    private static final String DURATION = "last-week";
     @MockBean
     private MeterReadingCostService meterReadingCostService;
     @Autowired
@@ -37,19 +38,21 @@ class MeterReadingCostControllerTest {
         when(meterReadingCostService.getLastWeekCostOfTheDate(any(String.class), any(Instant.class))).thenReturn(BigDecimal.valueOf(100.0));
 
         mockMvc.perform(MockMvcRequestBuilders
-                        .get("/smart-meters/"+ SMART_METER_ID + "/costs"))
+                        .get("/smart-meters/"+ SMART_METER_ID + "/costs")
+                        .param("duration", DURATION))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.smartMeterId").value(SMART_METER_ID))
                 .andExpect(jsonPath("$.costs").value(100.0));
     }
 
     @Test
-    void shouldThrowReadingsNotFoundStatus() throws Exception {
+    void shouldThrowReadingsNotFoundStatusWhenGivenUnknownId() throws Exception {
 
         when(meterReadingCostService.getLastWeekCostOfTheDate(any(String.class), any(Instant.class)))
                 .thenThrow(new ReadingsNotFoundException());
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/smart-meters/"+ UNKNOWN_ID + "/costs"))
+        mockMvc.perform(MockMvcRequestBuilders.get("/smart-meters/"+ UNKNOWN_ID + "/costs")
+                        .param("duration", DURATION))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$").value("No Readings Found."));
     }
@@ -61,6 +64,7 @@ class MeterReadingCostControllerTest {
 
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/smart-meters/"+ SMART_METER_ID + "/costs")
+                        .param("duration", DURATION)
                 )
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$").value("No price plan matched with " + SMART_METER_ID));
@@ -70,7 +74,61 @@ class MeterReadingCostControllerTest {
     void shouldReturnLastWeekCostOfTheGivenDate() throws Exception {
         when(meterReadingCostService.getLastWeekCostOfTheDate(any(String.class), any(Instant.class))).thenReturn(BigDecimal.valueOf(100.0));
         mockMvc.perform(MockMvcRequestBuilders
-                .get("/smart-meters/" + SMART_METER_ID + "/costs"))
+                .get("/smart-meters/" + SMART_METER_ID + "/costs")
+                        .param("duration", DURATION)
+                        .param("entered", "2023-04-10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.smartMeterId").value(SMART_METER_ID))
+                .andExpect(jsonPath("$.costs").value(100.0));
+    }
+
+    @Test
+    void shouldGiveErrorMessageWhenGivenWrongDate() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders
+                        .get("/smart-meters/" + SMART_METER_ID + "/costs")
+                        .param("duration", DURATION)
+                        .param("enteredDate", "2088-04-10"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$").value("Date not present"));
+    }
+
+    @Test
+    void shouldGiveErrorMessageWhenGivenWrongDuration() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders
+                        .get("/smart-meters/" + SMART_METER_ID + "/costs")
+                        .param("duration", "lastMonth")
+                        .param("enteredDate", "2023-04-10"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$").value("No Readings Found."));
+    }
+
+    @Test
+    void shouldGiveErrorMessageWhenNotGivenDuration() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders
+                        .get("/smart-meters/" + SMART_METER_ID + "/costs")
+                        .param("duration", (String) null)
+                        .param("enteredDate", "2023-04-10"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$").value("Unknown date range."));
+    }
+
+    @Test
+    void shouldGiveErrorMessageWhenGivenWrongDateFormatAndBadDuration() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders
+                        .get("/smart-meters/" + SMART_METER_ID + "/costs")
+                        .param("duration", (String) null)
+                        .param("enteredDate", "abc"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$").value("Invalid date format entered."));
+    }
+
+    @Test
+    void shouldReturnLastWeekCostOfTheGivenDateWhetherMatchedAnyTypeOfLastWeekDuration() throws Exception {
+        when(meterReadingCostService.getLastWeekCostOfTheDate(any(String.class), any(Instant.class))).thenReturn(BigDecimal.valueOf(100.0));
+        mockMvc.perform(MockMvcRequestBuilders
+                        .get("/smart-meters/" + SMART_METER_ID + "/costs")
+                        .param("duration", "lAst@#$%^&*()weeK")
+                        .param("entered", "2023-04-10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.smartMeterId").value(SMART_METER_ID))
                 .andExpect(jsonPath("$.costs").value(100.0));
