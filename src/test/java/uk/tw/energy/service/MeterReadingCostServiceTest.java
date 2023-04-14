@@ -7,8 +7,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.test.context.SpringBootTest;
-import uk.tw.energy.controller.exception.PricePlanNotMatchedException;
-import uk.tw.energy.controller.exception.ReadingsNotFoundException;
+import uk.tw.energy.adapter.SmartMeter.controller.exception.PricePlanNotMatchedException;
+import uk.tw.energy.adapter.SmartMeter.controller.exception.ReadingsNotFoundException;
 import uk.tw.energy.domain.ElectricityReading;
 
 import java.math.BigDecimal;

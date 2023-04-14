@@ -1,4 +1,4 @@
-package uk.tw.energy.controller;
+package uk.tw.energy.adapter.PricePlan;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

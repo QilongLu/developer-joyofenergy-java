@@ -1,4 +1,4 @@
-package uk.tw.energy.controller.exception;
+package uk.tw.energy.adapter.SmartMeter.controller.exception;
 
 public class PricePlanNotMatchedException extends RuntimeException {
     public PricePlanNotMatchedException(String smartMeterId) {

@@ -1,7 +1,7 @@
 package uk.tw.energy.service;
 
 import org.springframework.stereotype.Service;
-import uk.tw.energy.controller.exception.ReadingsNotFoundException;
+import uk.tw.energy.adapter.SmartMeter.controller.exception.ReadingsNotFoundException;
 import uk.tw.energy.domain.ElectricityReading;
 import uk.tw.energy.domain.PricePlan;
 

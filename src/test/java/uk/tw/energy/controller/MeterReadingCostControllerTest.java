@@ -9,8 +9,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import uk.tw.energy.controller.exception.PricePlanNotMatchedException;
-import uk.tw.energy.controller.exception.ReadingsNotFoundException;
+import uk.tw.energy.adapter.SmartMeter.controller.exception.PricePlanNotMatchedException;
+import uk.tw.energy.adapter.SmartMeter.controller.exception.ReadingsNotFoundException;
 import uk.tw.energy.service.MeterReadingCostService;
 
 import java.math.BigDecimal;
@@ -18,7 +18,6 @@ import java.time.Instant;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -34,13 +33,14 @@ class MeterReadingCostControllerTest {
     private MockMvc mockMvc;
 
     @Test
-    void givenMeterIdShouldReturnLastWeekUsageCost() throws Exception {
+    void givenMeterIdWithoutDateEnteredShouldReturnDefaultLastWeekUsageCost() throws Exception {
         when(meterReadingCostService.getLastWeekCostOfTheDate(any(String.class), any(Instant.class))).thenReturn(BigDecimal.valueOf(100.0));
 
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/smart-meters/"+ SMART_METER_ID + "/costs"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").value(100.0));
+                .andExpect(jsonPath("$.smartMeterId").value(SMART_METER_ID))
+                .andExpect(jsonPath("$.costs").value(100.0));
     }
 
     @Test
@@ -72,6 +72,7 @@ class MeterReadingCostControllerTest {
         mockMvc.perform(MockMvcRequestBuilders
                 .get("/smart-meters/" + SMART_METER_ID + "/costs"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("100.0"));
+                .andExpect(jsonPath("$.smartMeterId").value(SMART_METER_ID))
+                .andExpect(jsonPath("$.costs").value(100.0));
     }
 }

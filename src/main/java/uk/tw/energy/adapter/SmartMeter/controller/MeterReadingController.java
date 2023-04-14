@@ -1,4 +1,4 @@
-package uk.tw.energy.controller;
+package uk.tw.energy.adapter.SmartMeter.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

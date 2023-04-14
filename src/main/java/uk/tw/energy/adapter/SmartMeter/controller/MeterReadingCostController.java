@@ -1,4 +1,4 @@
-package uk.tw.energy.controller;
+package uk.tw.energy.adapter.SmartMeter.controller;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import uk.tw.energy.adapter.SmartMeter.dto.response.SmartMeterResponse;
 import uk.tw.energy.service.MeterReadingCostService;
 
 import java.math.BigDecimal;
@@ -25,15 +26,22 @@ public class MeterReadingCostController {
     }
 
     @GetMapping("/{smartMeterId}/costs")
-    public ResponseEntity<BigDecimal> getLastWeekOfDateCosts(@PathVariable("smartMeterId") String smartMeterId,
-                                                            @RequestParam(value = "enteredDate", required = false)
-                                             @DateTimeFormat(pattern = "yyyy-MM-dd")
-                                             LocalDate enteredDate) {
+    public ResponseEntity<SmartMeterResponse> getLastWeekOfDateCosts(
+            @PathVariable("smartMeterId") String smartMeterId,
+            @RequestParam(value = "enteredDate", required = false)
+            @DateTimeFormat(pattern = "yyyy-MM-dd")
+            LocalDate enteredDate,
+            @RequestParam(value = "duration", defaultValue = "lastWeek")
+            String duration
+    ) {
         if (enteredDate == null) {
             enteredDate = LocalDate.now();
         }
         Instant date = enteredDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
-        BigDecimal lastWeekCosts = meterReadingCostService.getLastWeekCostOfTheDate(smartMeterId, date);
-        return ResponseEntity.ok().body(lastWeekCosts);
+        BigDecimal lastWeekCostOfTheDate = meterReadingCostService.getLastWeekCostOfTheDate(smartMeterId, date);
+        SmartMeterResponse smartMeterResponse = new SmartMeterResponse
+                .Builder(smartMeterId, lastWeekCostOfTheDate)
+                .build();
+        return ResponseEntity.ok(smartMeterResponse);
     }
 }
