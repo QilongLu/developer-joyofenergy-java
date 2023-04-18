@@ -27,8 +27,8 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -38,9 +38,8 @@ class MeterReadingCostServiceTest {
     private static final String SMART_METER_ID = "smart-meter-0";
     private static final String UNKNOWN_METER_ID = "unknown-meter";
     private static final String PRICE_PLAN_ID = "price-plan-1";
-    private static final Instant NOW = Instant.now();
-    private static final Instant ONE_WEEK_AGO = NOW.minus(Duration.ofDays(7));
     private static final Instant TEST_DATE = Instant.now();
+    private static final Instant TEST_ONE_WEEK_AGO = TEST_DATE.minus(Duration.ofDays(7));
     private static final Instant TEST_THIS_WEEK_SUNDAY = LocalDateTime.ofInstant(TEST_DATE, ZoneId.systemDefault())
             .with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY)).toInstant(ZoneOffset.UTC);
 
@@ -54,9 +53,9 @@ class MeterReadingCostServiceTest {
     public void setUp() {
         Map<String, List<ElectricityReading>> meterAssociatedReadings = new HashMap<>();
         meterAssociatedReadings.put(SMART_METER_ID, Arrays.asList(
-                new ElectricityReading(NOW, BigDecimal.valueOf(0.2)),
-                new ElectricityReading(ONE_WEEK_AGO, BigDecimal.valueOf(0.3)),
-                new ElectricityReading(ONE_WEEK_AGO.plus(1, ChronoUnit.DAYS), BigDecimal.valueOf(15.0))
+                new ElectricityReading(TEST_DATE, BigDecimal.valueOf(0.2)),
+                new ElectricityReading(TEST_ONE_WEEK_AGO, BigDecimal.valueOf(0.3)),
+                new ElectricityReading(TEST_ONE_WEEK_AGO.plus(1, ChronoUnit.DAYS), BigDecimal.valueOf(15.0))
         ));
         meterReadingCostService = new MeterReadingCostService(meterAssociatedReadings, accountService, pricePlanService);
     }
@@ -66,18 +65,22 @@ class MeterReadingCostServiceTest {
     void shouldThrowPricePlanNotMatchedException() {
         when(accountService.getPricePlanIdForSmartMeterId(SMART_METER_ID))
                 .thenReturn(null);
-        Assertions.assertThrows(PricePlanNotMatchedException.class, () -> meterReadingCostService.getLastWeekCostOfTheDate(SMART_METER_ID, TEST_DATE));
+        Assertions.assertThrows(
+                PricePlanNotMatchedException.class,
+                () -> meterReadingCostService.getLastWeekCostOfTheDate(SMART_METER_ID, TEST_DATE));
     }
 
     @Test
     void shouldThrowReadingsNotFoundExceptionWhenGivenAnUnknownMeterId() {
-        assertThrows(ReadingsNotFoundException.class, () -> meterReadingCostService.getLastWeekCostOfTheDate(UNKNOWN_METER_ID, TEST_DATE));
+        assertThrows(
+                ReadingsNotFoundException.class,
+                () -> meterReadingCostService.getLastWeekCostOfTheDate(UNKNOWN_METER_ID, TEST_DATE));
     }
 
     @Test
     void shouldReturnCorrectCosts() {
         when(accountService.getPricePlanIdForSmartMeterId(SMART_METER_ID)).thenReturn(PRICE_PLAN_ID);
-        when(pricePlanService.calculateCost(anyList(), any(String.class))).thenReturn(BigDecimal.valueOf(1848.0));
+        when(pricePlanService.calculateCost(anyList(), eq(PRICE_PLAN_ID))).thenReturn(BigDecimal.valueOf(1848.0));
         BigDecimal lastWeekCosts = meterReadingCostService.getLastWeekCostOfTheDate(SMART_METER_ID, TEST_DATE);
         assertEquals(BigDecimal.valueOf(1848.0), lastWeekCosts);
     }
@@ -85,7 +88,7 @@ class MeterReadingCostServiceTest {
     @Test
     void shouldReturnCorrectCostsFromLastWeekOfTheDay() {
         when(accountService.getPricePlanIdForSmartMeterId(SMART_METER_ID)).thenReturn(PRICE_PLAN_ID);
-        when(pricePlanService.calculateCost(anyList(), any(String.class))).thenReturn(BigDecimal.valueOf(1248.0));
+        when(pricePlanService.calculateCost(anyList(), eq(PRICE_PLAN_ID))).thenReturn(BigDecimal.valueOf(1248.0));
         BigDecimal lastWeekOfTheDayCosts = meterReadingCostService.getLastWeekCostOfTheDate(SMART_METER_ID, TEST_THIS_WEEK_SUNDAY);
         assertEquals(BigDecimal.valueOf(1248.0), lastWeekOfTheDayCosts);
     }

@@ -17,6 +17,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -35,7 +36,7 @@ class MeterReadingCostControllerTest {
 
     @Test
     void givenMeterIdWithoutDateEnteredShouldReturnDefaultLastWeekUsageCost() throws Exception {
-        when(meterReadingCostService.getLastWeekCostOfTheDate(any(String.class), any(Instant.class))).thenReturn(BigDecimal.valueOf(100.0));
+        when(meterReadingCostService.getLastWeekCostOfTheDate(eq(SMART_METER_ID), any(Instant.class))).thenReturn(BigDecimal.valueOf(100.0));
 
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/smart-meters/"+ SMART_METER_ID + "/costs")
@@ -48,7 +49,7 @@ class MeterReadingCostControllerTest {
     @Test
     void shouldThrowReadingsNotFoundStatusWhenGivenUnknownId() throws Exception {
 
-        when(meterReadingCostService.getLastWeekCostOfTheDate(any(String.class), any(Instant.class)))
+        when(meterReadingCostService.getLastWeekCostOfTheDate(eq(UNKNOWN_ID), any(Instant.class)))
                 .thenThrow(new ReadingsNotFoundException());
 
         mockMvc.perform(MockMvcRequestBuilders.get("/smart-meters/"+ UNKNOWN_ID + "/costs")
@@ -59,7 +60,7 @@ class MeterReadingCostControllerTest {
 
     @Test
     void shouldThrowPricePlanNotMatchedException() throws Exception {
-        when(meterReadingCostService.getLastWeekCostOfTheDate(any(String.class), any(Instant.class)))
+        when(meterReadingCostService.getLastWeekCostOfTheDate(eq(SMART_METER_ID), any(Instant.class)))
                 .thenThrow(new PricePlanNotMatchedException(SMART_METER_ID));
 
         mockMvc.perform(MockMvcRequestBuilders
@@ -72,7 +73,7 @@ class MeterReadingCostControllerTest {
 
     @Test
     void shouldReturnLastWeekCostOfTheGivenDate() throws Exception {
-        when(meterReadingCostService.getLastWeekCostOfTheDate(any(String.class), any(Instant.class))).thenReturn(BigDecimal.valueOf(100.0));
+        when(meterReadingCostService.getLastWeekCostOfTheDate(eq(SMART_METER_ID), any(Instant.class))).thenReturn(BigDecimal.valueOf(100.0));
         mockMvc.perform(MockMvcRequestBuilders
                 .get("/smart-meters/" + SMART_METER_ID + "/costs")
                         .param("duration", DURATION)
@@ -124,7 +125,7 @@ class MeterReadingCostControllerTest {
 
     @Test
     void shouldReturnLastWeekCostOfTheGivenDateWhetherMatchedAnyTypeOfLastWeekDuration() throws Exception {
-        when(meterReadingCostService.getLastWeekCostOfTheDate(any(String.class), any(Instant.class))).thenReturn(BigDecimal.valueOf(100.0));
+        when(meterReadingCostService.getLastWeekCostOfTheDate(eq(SMART_METER_ID), any(Instant.class))).thenReturn(BigDecimal.valueOf(100.0));
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/smart-meters/" + SMART_METER_ID + "/costs")
                         .param("duration", "lAst@#$%^&*()weeK")
