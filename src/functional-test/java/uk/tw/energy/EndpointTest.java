@@ -14,6 +14,8 @@ import org.springframework.http.ResponseEntity;
 import uk.tw.energy.builders.MeterReadingsBuilder;
 import uk.tw.energy.domain.MeterReadings;
 
+import java.time.Instant;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = App.class)
@@ -73,7 +75,7 @@ public class EndpointTest {
 
     private void populateMeterReadingsForMeter(String smartMeterId) throws JsonProcessingException {
         MeterReadings readings = new MeterReadingsBuilder().setSmartMeterId(smartMeterId)
-                .generateElectricityReadings(20)
+                .generateElectricityReadings(20, Instant.now())
                 .build();
 
         HttpEntity<String> entity = getStringHttpEntity(readings);

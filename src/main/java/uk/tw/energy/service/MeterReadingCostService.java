@@ -3,6 +3,7 @@ package uk.tw.energy.service;
 import org.springframework.stereotype.Service;
 import uk.tw.energy.adapter.SmartMeter.controller.exception.PricePlanNotMatchedException;
 import uk.tw.energy.adapter.SmartMeter.controller.exception.ReadingsNotFoundException;
+import uk.tw.energy.domain.DayOfWeekCost;
 import uk.tw.energy.domain.ElectricityReading;
 
 import java.math.BigDecimal;
@@ -54,5 +55,9 @@ public class MeterReadingCostService {
         Instant lastWeekStart = lastWeekSunday.toInstant(ZoneOffset.UTC);
         Instant lastWeekEnd = lastWeekStart.plus(7, ChronoUnit.DAYS);
         return readingTime.isAfter(lastWeekStart) && readingTime.isBefore(lastWeekEnd);
+    }
+
+    public List<DayOfWeekCost> getDayOfWeekCost(String smartMeterId) {
+        return null;
     }
 }

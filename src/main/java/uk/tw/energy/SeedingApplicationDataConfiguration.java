@@ -11,6 +11,7 @@ import uk.tw.energy.domain.PricePlan;
 import uk.tw.energy.generator.ElectricityReadingsGenerator;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -40,7 +41,7 @@ public class SeedingApplicationDataConfiguration {
         final ElectricityReadingsGenerator electricityReadingsGenerator = new ElectricityReadingsGenerator();
         smartMeterToPricePlanAccounts()
                 .keySet()
-                .forEach(smartMeterId -> readings.put(smartMeterId, electricityReadingsGenerator.generate(20)));
+                .forEach(smartMeterId -> readings.put(smartMeterId, electricityReadingsGenerator.generate(20, Instant.now())));
         return readings;
     }
 

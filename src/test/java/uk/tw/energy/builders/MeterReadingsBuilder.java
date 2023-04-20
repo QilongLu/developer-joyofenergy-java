@@ -4,6 +4,7 @@ import uk.tw.energy.domain.ElectricityReading;
 import uk.tw.energy.domain.MeterReadings;
 import uk.tw.energy.generator.ElectricityReadingsGenerator;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,12 +21,12 @@ public class MeterReadingsBuilder {
     }
 
     public MeterReadingsBuilder generateElectricityReadings() {
-        return generateElectricityReadings(5);
+        return generateElectricityReadings(5, Instant.now());
     }
 
-    public MeterReadingsBuilder generateElectricityReadings(int number) {
+    public MeterReadingsBuilder generateElectricityReadings(int number, Instant date) {
         ElectricityReadingsGenerator readingsBuilder = new ElectricityReadingsGenerator();
-        this.electricityReadings = readingsBuilder.generate(number);
+        this.electricityReadings = readingsBuilder.generate(number, date);
         return this;
     }
 
