@@ -65,7 +65,7 @@ class MeterReadingCostControllerTest {
                         .param("duration", DURATION))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.smartMeterId").value(SMART_METER_ID))
-                .andExpect(jsonPath("$.bill").value(100.0));
+                .andExpect(jsonPath("$.costs").value(100.0));
     }
 
     @Test
@@ -102,7 +102,7 @@ class MeterReadingCostControllerTest {
                         .param("entered", "2023-04-10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.smartMeterId").value(SMART_METER_ID))
-                .andExpect(jsonPath("$.bill").value(100.0));
+                .andExpect(jsonPath("$.costs").value(100.0));
     }
 
     @Test
@@ -154,82 +154,42 @@ class MeterReadingCostControllerTest {
                         .param("entered", "2023-04-10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.smartMeterId").value(SMART_METER_ID))
-                .andExpect(jsonPath("$.bill").value(100.0));
+                .andExpect(jsonPath("$.costs").value(100.0));
+    }
+
+    private static DayOfWeekCost buildDayOfWeekCost(List<ElectricityReading> dailyReadings, Double cost, DayOfWeek dayOfWeek) {
+        return DayOfWeekCost.builder()
+                .dayOfWeek(dayOfWeek)
+                .cost(BigDecimal.valueOf(cost))
+                .dailyElectricityReadings(dailyReadings)
+                .build();
+    }
+
+    private static List<ElectricityReading> getDailyElectricityReadings(Instant weekDay) {
+        return new MeterReadingsBuilder()
+                .setSmartMeterId(SMART_METER_ID)
+                .generateElectricityReadings(5, weekDay)
+                .build()
+                .getElectricityReadings();
     }
 
     @Test
     void shouldReturnDayOfWeekCostsWhenGivenSmartMeterId() throws Exception {
-        List<ElectricityReading> sundayReadings = new MeterReadingsBuilder()
-                .setSmartMeterId(SMART_METER_ID)
-                .generateElectricityReadings(5, SUNDAY)
-                .build()
-                .getElectricityReadings();
-        List<ElectricityReading> mondayReadings = new MeterReadingsBuilder()
-                .setSmartMeterId(SMART_METER_ID)
-                .generateElectricityReadings(5, MONDAY)
-                .build()
-                .getElectricityReadings();
-        List<ElectricityReading> tuesdayReadings = new MeterReadingsBuilder()
-                .setSmartMeterId(SMART_METER_ID)
-                .generateElectricityReadings(5, TUESDAY)
-                .build()
-                .getElectricityReadings();
-        List<ElectricityReading> wednesdayReadings = new MeterReadingsBuilder()
-                .setSmartMeterId(SMART_METER_ID)
-                .generateElectricityReadings(5, WEDNESDAY)
-                .build()
-                .getElectricityReadings();
-        List<ElectricityReading> thursdayReadings = new MeterReadingsBuilder()
-                .setSmartMeterId(SMART_METER_ID)
-                .generateElectricityReadings(5, THURSDAY)
-                .build()
-                .getElectricityReadings();
-        List<ElectricityReading> fridayReadings = new MeterReadingsBuilder()
-                .setSmartMeterId(SMART_METER_ID)
-                .generateElectricityReadings(5, FRIDAY)
-                .build()
-                .getElectricityReadings();
-        List<ElectricityReading> saturdayReadings = new MeterReadingsBuilder()
-                .setSmartMeterId(SMART_METER_ID)
-                .generateElectricityReadings(5, SATURDAY)
-                .build()
-                .getElectricityReadings();
+        List<ElectricityReading> sundayReadings = getDailyElectricityReadings(SUNDAY);
+        List<ElectricityReading> mondayReadings = getDailyElectricityReadings(MONDAY);
+        List<ElectricityReading> tuesdayReadings = getDailyElectricityReadings(TUESDAY);
+        List<ElectricityReading> wednesdayReadings = getDailyElectricityReadings(WEDNESDAY);
+        List<ElectricityReading> thursdayReadings = getDailyElectricityReadings(THURSDAY);
+        List<ElectricityReading> fridayReadings = getDailyElectricityReadings(FRIDAY);
+        List<ElectricityReading> saturdayReadings = getDailyElectricityReadings(SATURDAY);
 
-        DayOfWeekCost sundayCost = DayOfWeekCost.builder()
-                .date(sundayReadings.get(0).getTime().atZone(ZoneId.systemDefault()).toLocalDate())
-                .dailyCost(BigDecimal.valueOf(100.0))
-                .dailyElectricityReadings(sundayReadings)
-                .build();
-        DayOfWeekCost mondayCost = DayOfWeekCost.builder()
-                .date(mondayReadings.get(0).getTime().atZone(ZoneId.systemDefault()).toLocalDate())
-                .dailyCost(BigDecimal.valueOf(120.0))
-                .dailyElectricityReadings(mondayReadings)
-                .build();
-        DayOfWeekCost tuesdayCost = DayOfWeekCost.builder()
-                .date(tuesdayReadings.get(0).getTime().atZone(ZoneId.systemDefault()).toLocalDate())
-                .dailyCost(BigDecimal.valueOf(140.0))
-                .dailyElectricityReadings(tuesdayReadings)
-                .build();
-        DayOfWeekCost wednesdayCost = DayOfWeekCost.builder()
-                .date(wednesdayReadings.get(0).getTime().atZone(ZoneId.systemDefault()).toLocalDate())
-                .dailyCost(BigDecimal.valueOf(160.0))
-                .dailyElectricityReadings(wednesdayReadings)
-                .build();
-        DayOfWeekCost thursdayCost = DayOfWeekCost.builder()
-                .date(thursdayReadings.get(0).getTime().atZone(ZoneId.systemDefault()).toLocalDate())
-                .dailyCost(BigDecimal.valueOf(180.0))
-                .dailyElectricityReadings(thursdayReadings)
-                .build();
-        DayOfWeekCost fridayCost = DayOfWeekCost.builder()
-                .date(fridayReadings.get(0).getTime().atZone(ZoneId.systemDefault()).toLocalDate())
-                .dailyCost(BigDecimal.valueOf(110.0))
-                .dailyElectricityReadings(fridayReadings)
-                .build();
-        DayOfWeekCost saturdayCost = DayOfWeekCost.builder()
-                .date(saturdayReadings.get(0).getTime().atZone(ZoneId.systemDefault()).toLocalDate())
-                .dailyCost(BigDecimal.valueOf(130.0))
-                .dailyElectricityReadings(saturdayReadings)
-                .build();
+        DayOfWeekCost sundayCost = buildDayOfWeekCost(sundayReadings, 100.0, DayOfWeek.SUNDAY);
+        DayOfWeekCost mondayCost = buildDayOfWeekCost(mondayReadings, 120.0, DayOfWeek.MONDAY);
+        DayOfWeekCost tuesdayCost = buildDayOfWeekCost(tuesdayReadings, 140.0, DayOfWeek.TUESDAY);
+        DayOfWeekCost wednesdayCost = buildDayOfWeekCost(wednesdayReadings, 160.0, DayOfWeek.WEDNESDAY);
+        DayOfWeekCost thursdayCost = buildDayOfWeekCost(thursdayReadings, 180.0, DayOfWeek.THURSDAY);
+        DayOfWeekCost fridayCost = buildDayOfWeekCost(fridayReadings, 110.0, DayOfWeek.FRIDAY);
+        DayOfWeekCost saturdayCost = buildDayOfWeekCost(saturdayReadings, 130.0, DayOfWeek.SATURDAY);
         List<DayOfWeekCost> daysOfWeekCosts = List.of(
                 sundayCost,
                 mondayCost,
@@ -244,19 +204,19 @@ class MeterReadingCostControllerTest {
                 .get("/smart-meters/" + SMART_METER_ID + "/daily-cost"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.smartMeterId").value(SMART_METER_ID))
-                .andExpect(jsonPath("$.bill[0].date").value(SUNDAY.atZone(ZoneId.systemDefault()).toLocalDate().toString()))
-                .andExpect(jsonPath("$.bill[0].dailyCost").value(100.0))
-                .andExpect(jsonPath("$.bill[1].date").value(MONDAY.atZone(ZoneId.systemDefault()).toLocalDate().toString()))
-                .andExpect(jsonPath("$.bill[1].dailyCost").value(120.0))
-                .andExpect(jsonPath("$.bill[2].date").value(TUESDAY.atZone(ZoneId.systemDefault()).toLocalDate().toString()))
-                .andExpect(jsonPath("$.bill[2].dailyCost").value(140.0))
-                .andExpect(jsonPath("$.bill[3].date").value(WEDNESDAY.atZone(ZoneId.systemDefault()).toLocalDate().toString()))
-                .andExpect(jsonPath("$.bill[3].dailyCost").value(160.0))
-                .andExpect(jsonPath("$.bill[4].date").value(THURSDAY.atZone(ZoneId.systemDefault()).toLocalDate().toString()))
-                .andExpect(jsonPath("$.bill[4].dailyCost").value(180.0))
-                .andExpect(jsonPath("$.bill[5].date").value(FRIDAY.atZone(ZoneId.systemDefault()).toLocalDate().toString()))
-                .andExpect(jsonPath("$.bill[5].dailyCost").value(110.0))
-                .andExpect(jsonPath("$.bill[6].date").value(SATURDAY.atZone(ZoneId.systemDefault()).toLocalDate().toString()))
-                .andExpect(jsonPath("$.bill[6].dailyCost").value(130.0));
+                .andExpect(jsonPath("$.dailyCosts[0].dayOfWeek").value(DayOfWeek.SUNDAY.name()))
+                .andExpect(jsonPath("$.dailyCosts[0].cost").value(100.0))
+                .andExpect(jsonPath("$.dailyCosts[1].dayOfWeek").value(DayOfWeek.MONDAY.name()))
+                .andExpect(jsonPath("$.dailyCosts[1].cost").value(120.0))
+                .andExpect(jsonPath("$.dailyCosts[2].dayOfWeek").value(DayOfWeek.TUESDAY.name()))
+                .andExpect(jsonPath("$.dailyCosts[2].cost").value(140.0))
+                .andExpect(jsonPath("$.dailyCosts[3].dayOfWeek").value(DayOfWeek.WEDNESDAY.name()))
+                .andExpect(jsonPath("$.dailyCosts[3].cost").value(160.0))
+                .andExpect(jsonPath("$.dailyCosts[4].dayOfWeek").value(DayOfWeek.THURSDAY.name()))
+                .andExpect(jsonPath("$.dailyCosts[4].cost").value(180.0))
+                .andExpect(jsonPath("$.dailyCosts[5].dayOfWeek").value(DayOfWeek.FRIDAY.name()))
+                .andExpect(jsonPath("$.dailyCosts[5].cost").value(110.0))
+                .andExpect(jsonPath("$.dailyCosts[6].dayOfWeek").value(DayOfWeek.SATURDAY.name()))
+                .andExpect(jsonPath("$.dailyCosts[6].cost").value(130.0));
     }
 }

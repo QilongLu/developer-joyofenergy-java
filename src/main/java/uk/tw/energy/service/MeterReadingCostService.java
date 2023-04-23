@@ -14,8 +14,10 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 @Service
@@ -58,6 +60,23 @@ public class MeterReadingCostService {
     }
 
     public List<DayOfWeekCost> getDayOfWeekCost(String smartMeterId) {
-        return null;
+        List<ElectricityReading> readings = meterAssociatedReadings.get(smartMeterId);
+        String pricePlanId = accountService.getPricePlanIdForSmartMeterId(smartMeterId);
+
+        Map<DayOfWeek, List<ElectricityReading>> dailyOfWeekReadings = readings.stream()
+                .collect(Collectors.groupingBy(
+                        reading -> reading.getTime().atZone(ZoneId.systemDefault()).toLocalDate().getDayOfWeek(),
+                        TreeMap::new, Collectors.toList()));
+
+        List<DayOfWeekCost> dayOfWeekCosts = new ArrayList<>();
+        for (DayOfWeek dayOfWeek : dailyOfWeekReadings.keySet()) {
+            DayOfWeekCost dayOfWeekCost = DayOfWeekCost.builder()
+                    .dayOfWeek(dayOfWeek)
+                    .cost(pricePlanService.calculateCost(dailyOfWeekReadings.get(dayOfWeek), pricePlanId))
+                    .dailyElectricityReadings(dailyOfWeekReadings.get(dayOfWeek))
+                    .build();
+            dayOfWeekCosts.add(dayOfWeekCost);
+        }
+        return dayOfWeekCosts;
     }
 }

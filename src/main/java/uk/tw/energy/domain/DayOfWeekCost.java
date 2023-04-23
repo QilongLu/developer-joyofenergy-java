@@ -5,14 +5,14 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.DayOfWeek;
 import java.util.List;
 
 @Builder
 @Getter
 @AllArgsConstructor
 public class DayOfWeekCost {
-    private LocalDate date;
-    private final BigDecimal dailyCost;
+    private DayOfWeek dayOfWeek;
+    private final BigDecimal cost;
     private List<ElectricityReading> dailyElectricityReadings;
 }

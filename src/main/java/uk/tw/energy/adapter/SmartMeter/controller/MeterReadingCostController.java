@@ -9,7 +9,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import uk.tw.energy.adapter.SmartMeter.controller.exception.ReadingsNotFoundException;
-import uk.tw.energy.adapter.SmartMeter.dto.response.SmartMeterResponse;
+import uk.tw.energy.adapter.SmartMeter.dto.response.SmartMeterDailyCostsResponse;
+import uk.tw.energy.adapter.SmartMeter.dto.response.SmartMeterWeeklyCostsResponse;
 import uk.tw.energy.domain.DayOfWeekCost;
 import uk.tw.energy.service.MeterReadingCostService;
 
@@ -32,7 +33,7 @@ public class MeterReadingCostController {
     }
 
     @GetMapping("/{smartMeterId}/costs")
-    public ResponseEntity<SmartMeterResponse<BigDecimal>> getLastWeekOfDateCosts(
+    public ResponseEntity<SmartMeterWeeklyCostsResponse> getLastWeekOfDateCosts(
             @PathVariable("smartMeterId") String smartMeterId,
             @RequestParam(value = "enteredDate", required = false)
             @DateTimeFormat(pattern = "yyyy-MM-dd")
@@ -47,11 +48,11 @@ public class MeterReadingCostController {
             }
             Instant date = enteredDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
             BigDecimal lastWeekCostOfTheDate = meterReadingCostService.getLastWeekCostOfTheDate(smartMeterId, date);
-            SmartMeterResponse<BigDecimal> smartMeterResponse = SmartMeterResponse.<BigDecimal>builder()
+            SmartMeterWeeklyCostsResponse smartMeterWeeklyCostsResponse = SmartMeterWeeklyCostsResponse.builder()
                     .smartMeterId(smartMeterId)
-                    .bill(lastWeekCostOfTheDate)
+                    .costs(lastWeekCostOfTheDate)
                     .build();
-            return ResponseEntity.ok(smartMeterResponse);
+            return ResponseEntity.ok(smartMeterWeeklyCostsResponse);
         }
         else {
             throw new ReadingsNotFoundException();
@@ -59,12 +60,12 @@ public class MeterReadingCostController {
     }
 
     @GetMapping("{smartMeterId}/daily-cost")
-    public ResponseEntity<SmartMeterResponse<List<DayOfWeekCost>>> getDayOfWeekCost(@PathVariable("smartMeterId") String smartMeterId) {
+    public ResponseEntity<SmartMeterDailyCostsResponse> getDayOfWeekCost(@PathVariable("smartMeterId") String smartMeterId) {
         List<DayOfWeekCost> daysOfWeekCosts = meterReadingCostService.getDayOfWeekCost(smartMeterId);
-        SmartMeterResponse<List<DayOfWeekCost>> smartMeterResponse = SmartMeterResponse.<List<DayOfWeekCost>>builder()
+        SmartMeterDailyCostsResponse smartMeterDailyCostsResponse = SmartMeterDailyCostsResponse.builder()
                 .smartMeterId(smartMeterId)
-                .bill(daysOfWeekCosts)
+                .dailyCosts(daysOfWeekCosts)
                 .build();
-        return ResponseEntity.ok(smartMeterResponse);
+        return ResponseEntity.ok(smartMeterDailyCostsResponse);
     }
 }
