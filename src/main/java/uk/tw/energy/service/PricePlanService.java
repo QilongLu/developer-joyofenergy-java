@@ -8,6 +8,9 @@ import uk.tw.energy.domain.PricePlan;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -45,9 +48,18 @@ public class PricePlanService {
                 .filter(p -> p.getPlanName().equals(pricePlanId))
                 .findFirst()
                 .get();
-        BigDecimal energyConsumed = calculateConsumed(electricityReadings);
 
-        return energyConsumed.multiply(pricePlan.getUnitRate()).setScale(1, RoundingMode.HALF_UP);
+        Map<LocalDate, List<ElectricityReading>> readingsByDate = electricityReadings.stream()
+                .collect(
+                        Collectors.groupingBy(
+                                reading -> LocalDateTime.ofInstant(reading.getTime(), ZoneOffset.UTC)
+                                        .toLocalDate()));
+
+        BigDecimal totalCost = readingsByDate.values().stream()
+                .map(readings -> calculateConsumed(readings).multiply(pricePlan.getUnitRate()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return totalCost.setScale(1, RoundingMode.HALF_UP);
     }
 
     private BigDecimal calculateAverageReading(List<ElectricityReading> electricityReadings) {
