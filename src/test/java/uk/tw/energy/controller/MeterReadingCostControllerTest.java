@@ -219,4 +219,20 @@ class MeterReadingCostControllerTest {
                 .andExpect(jsonPath("$.dailyCosts[6].dayOfWeek").value(DayOfWeek.SATURDAY.name()))
                 .andExpect(jsonPath("$.dailyCosts[6].cost").value(130.0));
     }
+
+    @Test
+    void shouldReturnRankOfWhatPricePlanUsedWithDayOfWeekCostsWhenGivenSmartMeterId() throws Exception {
+        List<ElectricityReading> sundayReadings = getDailyElectricityReadings(SUNDAY);
+
+        DayOfWeekCost sundayCost = buildDayOfWeekCost(sundayReadings, 100.0, DayOfWeek.SUNDAY);
+
+        List<DayOfWeekCost> daysOfWeekCosts = List.of(sundayCost);
+        when(meterReadingCostService.getDayOfWeekCost(SMART_METER_ID)).thenReturn(daysOfWeekCosts);
+        when(meterReadingCostService.getRankForCurrentPricePlan(SMART_METER_ID)).thenReturn(3);
+        mockMvc.perform(MockMvcRequestBuilders
+                        .get("/smart-meters/" + SMART_METER_ID + "/daily-cost"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.smartMeterId").value(SMART_METER_ID))
+                .andExpect(jsonPath("$.currentPricePlanRank").value(3));
+    }
 }

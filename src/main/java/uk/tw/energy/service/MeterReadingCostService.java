@@ -79,4 +79,9 @@ public class MeterReadingCostService {
         }
         return dayOfWeekCosts;
     }
+
+    public Integer getRankForCurrentPricePlan(String smartMeterId) {
+        pricePlanService.getCostOfElectricityReadingsForEachPricePlan(smartMeterId);
+        return 0;
+    }
 }

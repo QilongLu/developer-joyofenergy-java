@@ -11,4 +11,6 @@ import java.util.List;
 public class SmartMeterDailyCostsResponse {
     private String smartMeterId;
     private List<DayOfWeekCost> dailyCosts;
+
+    private Integer currentPricePlanRank;
 }
