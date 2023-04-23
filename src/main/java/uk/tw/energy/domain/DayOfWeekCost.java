@@ -13,6 +13,7 @@ import java.util.List;
 @AllArgsConstructor
 public class DayOfWeekCost {
     private DayOfWeek dayOfWeek;
-    private final BigDecimal cost;
+    private BigDecimal cost;
+    private Integer currentPricePlanRank;
     private List<ElectricityReading> dailyElectricityReadings;
 }

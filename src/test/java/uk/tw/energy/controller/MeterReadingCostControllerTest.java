@@ -224,15 +224,19 @@ class MeterReadingCostControllerTest {
     void shouldReturnRankOfWhatPricePlanUsedWithDayOfWeekCostsWhenGivenSmartMeterId() throws Exception {
         List<ElectricityReading> sundayReadings = getDailyElectricityReadings(SUNDAY);
 
-        DayOfWeekCost sundayCost = buildDayOfWeekCost(sundayReadings, 100.0, DayOfWeek.SUNDAY);
+        DayOfWeekCost sundayCost = DayOfWeekCost.builder()
+                .dayOfWeek(DayOfWeek.SUNDAY)
+                .cost(BigDecimal.valueOf(100.0))
+                .currentPricePlanRank(3)
+                .dailyElectricityReadings(sundayReadings)
+                .build();
 
         List<DayOfWeekCost> daysOfWeekCosts = List.of(sundayCost);
         when(meterReadingCostService.getDayOfWeekCost(SMART_METER_ID)).thenReturn(daysOfWeekCosts);
-        when(meterReadingCostService.getRankForCurrentPricePlan(SMART_METER_ID)).thenReturn(3);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/smart-meters/" + SMART_METER_ID + "/daily-cost"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.smartMeterId").value(SMART_METER_ID))
-                .andExpect(jsonPath("$.currentPricePlanRank").value(3));
+                .andExpect(jsonPath("$.dailyCosts[0].currentPricePlanRank").value(3));
     }
 }

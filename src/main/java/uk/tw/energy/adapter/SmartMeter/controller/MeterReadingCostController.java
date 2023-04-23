@@ -62,11 +62,9 @@ public class MeterReadingCostController {
     @GetMapping("{smartMeterId}/daily-cost")
     public ResponseEntity<SmartMeterDailyCostsResponse> getDayOfWeekCost(@PathVariable("smartMeterId") String smartMeterId) {
         List<DayOfWeekCost> daysOfWeekCosts = meterReadingCostService.getDayOfWeekCost(smartMeterId);
-        Integer rank = meterReadingCostService.getRankForCurrentPricePlan(smartMeterId);
         SmartMeterDailyCostsResponse smartMeterDailyCostsResponse = SmartMeterDailyCostsResponse.builder()
                 .smartMeterId(smartMeterId)
                 .dailyCosts(daysOfWeekCosts)
-                .currentPricePlanRank(rank)
                 .build();
         return ResponseEntity.ok(smartMeterDailyCostsResponse);
     }
