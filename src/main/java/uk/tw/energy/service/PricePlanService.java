@@ -35,6 +35,27 @@ public class PricePlanService {
                 Collectors.toMap(PricePlan::getPlanName, t -> calculateCost(readings, t.getPlanName()))));
     }
 
+
+    public Integer getRankForCurrentPricePlan(List<ElectricityReading> dailyReadings, String pricePlanId) {
+        Map<String, BigDecimal> dailyCostForEachPricePlan = pricePlans.stream().collect(
+                Collectors.toMap(PricePlan::getPlanName, t -> calculateCostByDateAndAddUp(dailyReadings, t.getPlanName())));
+
+        List<String> sortedCostOfPricePlans = dailyCostForEachPricePlan.entrySet().stream()
+                .sorted(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
+        return sortedCostOfPricePlans.indexOf(pricePlanId);
+    }
+
+    public BigDecimal calculateCostByDateAndAddUp(List<ElectricityReading> dailyReadings, String pricePlanId) {
+        Map<LocalDate, List<ElectricityReading>> readingsByDate = dailyReadings.stream()
+                .collect(Collectors.groupingBy(reading -> LocalDateTime.ofInstant(reading.getTime(), ZoneOffset.UTC).toLocalDate()));
+
+        return readingsByDate.values().stream()
+                .map(readings -> calculateCost(readings, pricePlanId))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
     private BigDecimal calculateConsumed(List<ElectricityReading> electricityReadings) {
         BigDecimal average = calculateAverageReading(electricityReadings);
         BigDecimal timeElapsed = calculateTimeElapsed(electricityReadings);
@@ -48,18 +69,9 @@ public class PricePlanService {
                 .filter(p -> p.getPlanName().equals(pricePlanId))
                 .findFirst()
                 .get();
+        BigDecimal energyConsumed = calculateConsumed(electricityReadings);
 
-        Map<LocalDate, List<ElectricityReading>> readingsByDate = electricityReadings.stream()
-                .collect(
-                        Collectors.groupingBy(
-                                reading -> LocalDateTime.ofInstant(reading.getTime(), ZoneOffset.UTC)
-                                        .toLocalDate()));
-
-        BigDecimal totalCost = readingsByDate.values().stream()
-                .map(readings -> calculateConsumed(readings).multiply(pricePlan.getUnitRate()))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        return totalCost.setScale(1, RoundingMode.HALF_UP);
+        return energyConsumed.multiply(pricePlan.getUnitRate()).setScale(1, RoundingMode.HALF_UP);
     }
 
     private BigDecimal calculateAverageReading(List<ElectricityReading> electricityReadings) {
