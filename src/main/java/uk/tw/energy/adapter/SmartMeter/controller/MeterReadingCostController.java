@@ -42,21 +42,19 @@ public class MeterReadingCostController {
             @RequestParam(value = "duration")
             String duration
     ) {
-        if (duration.matches("(?i)^last.*week$")) {
-            if (enteredDate == null) {
-                enteredDate = LocalDate.now();
-            }
-            Instant date = enteredDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
-            BigDecimal lastWeekCostOfTheDate = meterReadingCostService.getLastWeekCostOfTheDate(smartMeterId, date);
-            SmartMeterWeeklyCostsResponse smartMeterWeeklyCostsResponse = SmartMeterWeeklyCostsResponse.builder()
-                    .smartMeterId(smartMeterId)
-                    .costs(lastWeekCostOfTheDate)
-                    .build();
-            return ResponseEntity.ok(smartMeterWeeklyCostsResponse);
-        }
-        else {
+        if (!duration.matches("(?i)^last.*week$")) {
             throw new ReadingsNotFoundException();
         }
+        if (enteredDate == null) {
+            enteredDate = LocalDate.now();
+        }
+        Instant date = enteredDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
+        BigDecimal lastWeekCostOfTheDate = meterReadingCostService.getLastWeekCostOfTheDate(smartMeterId, date);
+        SmartMeterWeeklyCostsResponse smartMeterWeeklyCostsResponse = SmartMeterWeeklyCostsResponse.builder()
+                .smartMeterId(smartMeterId)
+                .costs(lastWeekCostOfTheDate)
+                .build();
+        return ResponseEntity.ok(smartMeterWeeklyCostsResponse);
     }
 
     @GetMapping("{smartMeterId}/daily-cost")
