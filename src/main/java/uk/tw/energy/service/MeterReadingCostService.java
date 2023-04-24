@@ -14,7 +14,6 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -68,20 +67,13 @@ public class MeterReadingCostService {
                         reading -> reading.getTime().atZone(ZoneId.systemDefault()).toLocalDate().getDayOfWeek(),
                         TreeMap::new, Collectors.toList()));
 
-        List<DayOfWeekCost> dayOfWeekCosts = new ArrayList<>();
-        for (DayOfWeek dayOfWeek : dailyOfWeekReadings.keySet()) {
-            DayOfWeekCost dayOfWeekCost = DayOfWeekCost.builder()
-                    .dayOfWeek(dayOfWeek)
-                    .cost(pricePlanService.calculateCost(dailyOfWeekReadings.get(dayOfWeek), pricePlanId))
-                    .dailyElectricityReadings(dailyOfWeekReadings.get(dayOfWeek))
-                    .build();
-            dayOfWeekCosts.add(dayOfWeekCost);
-        }
-        return dayOfWeekCosts;
-    }
-
-    public Integer getRankForCurrentPricePlan(String smartMeterId) {
-        pricePlanService.getCostOfElectricityReadingsForEachPricePlan(smartMeterId);
-        return 0;
+        return dailyOfWeekReadings.keySet().stream()
+                .map(dayOfWeek -> DayOfWeekCost.builder()
+                        .dayOfWeek(dayOfWeek)
+                        .cost(pricePlanService.calculateCostByDateAndAddUp(dailyOfWeekReadings.get(dayOfWeek), pricePlanId))
+                        .currentPricePlanRank(pricePlanService.getRankForCurrentPricePlan(dailyOfWeekReadings.get(dayOfWeek), pricePlanId))
+                        .dailyElectricityReadings(dailyOfWeekReadings.get(dayOfWeek))
+                        .build())
+                .collect(Collectors.toList());
     }
 }
